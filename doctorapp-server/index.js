@@ -32,7 +32,7 @@ async function run() {
     // 5.1 Authentication
     // Register API
     app.post("/api/auth/register", async (req, res) => {
-      const { name, email, password } = req.body;
+      const { name, email, password, role } = req.body;
 
       const existingUser = await userCollection.findOne({ email });
       if (existingUser) {
@@ -40,7 +40,7 @@ async function run() {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = { name, email, password: hashedPassword };
+      const newUser = { name, email, password: hashedPassword, role };
       const result = await userCollection.insertOne(newUser);
       res.status(201).json({ message: "User registered successfully" });
     });
@@ -66,7 +66,12 @@ async function run() {
       );
       res.json({
         token,
-        user: { id: user._id, name: user.name, email: user.email },
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
       });
     });
 
@@ -78,6 +83,13 @@ async function run() {
     // 5.2 Patient Routes
 
     // Get list of available doctors
+    app.post("/api/doctors", async (req, res) => {
+      const doctors = await doctorCollection.find().toArray();
+      res.status(200).json({
+        message: "List of available doctors",
+        data: doctors,
+      });
+    });
     app.get("/api/doctors", async (req, res) => {
       const doctors = await doctorCollection.find().toArray();
       res.status(200).json({
