@@ -11,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.twtll.mongodb.net/doctordb?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.twtll.mongodb.net/retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -145,15 +145,6 @@ async function run() {
       res.send(result);
     });
 
-    /***
-     * API Naming Convention
-     * app.get('/bookings')
-     * app.get('/bookings/:id')
-     * app.post('/bookings')
-     * app.patch('/bookings/:id')
-     * app.delete('/bookings/:id')
-     */
-
     app.get("/bookings", verifyJWT, async (req, res) => {
       const email = req.query.email;
       const decodedEmail = req.decoded.email;
@@ -255,11 +246,10 @@ async function run() {
       res.send({ isAdmin: user?.role === "admin" });
     });
 
-    app.post("/users", async (req, res) => {
+    app.post("/api/auth/register", async (req, res) => {
       const user = req.body;
       console.log(user);
-      // TODO: make sure you do not enter duplicate user email
-      // only insert users if the user doesn't exist in the database
+
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
@@ -294,7 +284,9 @@ async function run() {
     //     res.send(result);
     // })
 
-    app.get("/doctors", verifyJWT, verifyAdmin, async (req, res) => {
+    app.get("/doctors", async (req, res) => {
+      console.log(req);
+
       const query = {};
       const doctors = await doctorsCollection.find(query).toArray();
       res.send(doctors);
