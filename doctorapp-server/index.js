@@ -1,316 +1,150 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+const app = express();
 const port = process.env.PORT || 5000;
 
-const app = express();
-
-// middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.twtll.mongodb.net/retryWrites=true&w=majority`;
-const client = new MongoClient(uri, {
+const client = new MongoClient(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverApi: ServerApiVersion.v1,
 });
 
-function verifyJWT(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).send("unauthorized access");
-  }
-
-  const token = authHeader.split(" ")[1];
-
-  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
-    if (err) {
-      return res.status(403).send({ message: "forbidden access" });
-    }
-    req.decoded = decoded;
-    next();
-  });
-}
+console.log(process.env.MONGO_URI);
 
 async function run() {
   try {
-    const appointmentOptionCollection = client
-      .db("doctorsPortal")
-      .collection("appointmentOptions");
-    const bookingsCollection = client
-      .db("doctorsPortal")
-      .collection("bookings");
-    const usersCollection = client.db("doctorsPortal").collection("users");
-    const doctorsCollection = client.db("doctorsPortal").collection("doctors");
-    const paymentsCollection = client
-      .db("doctorsPortal")
-      .collection("payments");
+    await client.connect();
+    // collection list
+    const userCollection = client.db("doctordb").collection("users");
+    const doctorCollection = client.db("doctordb").collection("doctors");
+    const appointmentCollection = client
+      .db("doctordb")
+      .collection("appointments");
 
-    // NOTE: make sure you use verifyAdmin after verifyJWT
-    const verifyAdmin = async (req, res, next) => {
-      const decodedEmail = req.decoded.email;
-      const query = { email: decodedEmail };
-      const user = await usersCollection.findOne(query);
-
-      if (user?.role !== "admin") {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      next();
-    };
-
-    // Use Aggregate to query multiple collection and then merge data
-    app.get("/appointmentOptions", async (req, res) => {
-      const date = req.query.date;
-      const query = {};
-      const options = await appointmentOptionCollection.find(query).toArray();
-
-      // get the bookings of the provided date
-      const bookingQuery = { appointmentDate: date };
-      const alreadyBooked = await bookingsCollection
-        .find(bookingQuery)
-        .toArray();
-
-      // code carefully :D
-      options.forEach((option) => {
-        const optionBooked = alreadyBooked.filter(
-          (book) => book.treatment === option.name
-        );
-        const bookedSlots = optionBooked.map((book) => book.slot);
-        const remainingSlots = option.slots.filter(
-          (slot) => !bookedSlots.includes(slot)
-        );
-        option.slots = remainingSlots;
-      });
-      res.send(options);
-    });
-
-    app.get("/v2/appointmentOptions", async (req, res) => {
-      const date = req.query.date;
-      const options = await appointmentOptionCollection
-        .aggregate([
-          {
-            $lookup: {
-              from: "bookings",
-              localField: "name",
-              foreignField: "treatment",
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$appointmentDate", date],
-                    },
-                  },
-                },
-              ],
-              as: "booked",
-            },
-          },
-          {
-            $project: {
-              name: 1,
-              price: 1,
-              slots: 1,
-              booked: {
-                $map: {
-                  input: "$booked",
-                  as: "book",
-                  in: "$$book.slot",
-                },
-              },
-            },
-          },
-          {
-            $project: {
-              name: 1,
-              price: 1,
-              slots: {
-                $setDifference: ["$slots", "$booked"],
-              },
-            },
-          },
-        ])
-        .toArray();
-      res.send(options);
-    });
-
-    app.get("/appointmentSpecialty", async (req, res) => {
-      const query = {};
-      const result = await appointmentOptionCollection
-        .find(query)
-        .project({ name: 1 })
-        .toArray();
-      res.send(result);
-    });
-
-    app.get("/bookings", verifyJWT, async (req, res) => {
-      const email = req.query.email;
-      const decodedEmail = req.decoded.email;
-
-      if (email !== decodedEmail) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-
-      const query = { email: email };
-      const bookings = await bookingsCollection.find(query).toArray();
-      res.send(bookings);
-    });
-
-    app.get("/bookings/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: ObjectId(id) };
-      const booking = await bookingsCollection.findOne(query);
-      res.send(booking);
-    });
-
-    app.post("/bookings", async (req, res) => {
-      const booking = req.body;
-      console.log(booking);
-      const query = {
-        appointmentDate: booking.appointmentDate,
-        email: booking.email,
-        treatment: booking.treatment,
-      };
-
-      const alreadyBooked = await bookingsCollection.find(query).toArray();
-
-      if (alreadyBooked.length) {
-        const message = `You already have a booking on ${booking.appointmentDate}`;
-        return res.send({ acknowledged: false, message });
-      }
-
-      const result = await bookingsCollection.insertOne(booking);
-      // send email about appointment confirmation
-      sendBookingEmail(booking);
-      res.send(result);
-    });
-
-    app.post("/create-payment-intent", async (req, res) => {
-      const booking = req.body;
-      const price = booking.price;
-      const amount = price * 100;
-
-      const paymentIntent = await stripe.paymentIntents.create({
-        currency: "usd",
-        amount: amount,
-        payment_method_types: ["card"],
-      });
-      res.send({
-        clientSecret: paymentIntent.client_secret,
-      });
-    });
-
-    app.post("/payments", async (req, res) => {
-      const payment = req.body;
-      const result = await paymentsCollection.insertOne(payment);
-      const id = payment.bookingId;
-      const filter = { _id: ObjectId(id) };
-      const updatedDoc = {
-        $set: {
-          paid: true,
-          transactionId: payment.transactionId,
-        },
-      };
-      const updatedResult = await bookingsCollection.updateOne(
-        filter,
-        updatedDoc
-      );
-      res.send(result);
-    });
-
-    app.get("/jwt", async (req, res) => {
-      const email = req.query.email;
-      const query = { email: email };
-      const user = await usersCollection.findOne(query);
-      if (user) {
-        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, {
-          expiresIn: "1h",
-        });
-        return res.send({ accessToken: token });
-      }
-      res.status(403).send({ accessToken: "" });
-    });
-
-    app.get("/users", async (req, res) => {
-      const query = {};
-      const users = await usersCollection.find(query).toArray();
-      res.send(users);
-    });
-
-    app.get("/users/admin/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = { email };
-      const user = await usersCollection.findOne(query);
-      res.send({ isAdmin: user?.role === "admin" });
-    });
-
+    // 5.1 Authentication
+    // Register API
     app.post("/api/auth/register", async (req, res) => {
-      const user = req.body;
-      console.log(user);
+      const { name, email, password } = req.body;
 
-      const result = await usersCollection.insertOne(user);
-      res.send(result);
+      const existingUser = await userCollection.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = { name, email, password: hashedPassword };
+      const result = await userCollection.insertOne(newUser);
+      res.status(201).json({ message: "User registered successfully" });
     });
 
-    app.put("/users/admin/:id", verifyJWT, verifyAdmin, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: ObjectId(id) };
-      const options = { upsert: true };
-      const updatedDoc = {
-        $set: {
-          role: "admin",
-        },
-      };
-      const result = await usersCollection.updateOne(
-        filter,
-        updatedDoc,
-        options
+    // Login API
+    app.post("/api/auth/login", async (req, res) => {
+      const { email, password } = req.body;
+
+      const user = await userCollection.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ message: "Invalid credentials" });
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Invalid credentials" });
+      }
+
+      const token = jwt.sign(
+        { id: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
       );
-      res.send(result);
+      res.json({
+        token,
+        user: { id: user._id, name: user.name, email: user.email },
+      });
     });
 
-    // temporary to update price field on appointment options
-    // app.get('/addPrice', async (req, res) => {
-    //     const filter = {}
-    //     const options = { upsert: true }
-    //     const updatedDoc = {
-    //         $set: {
-    //             price: 99
-    //         }
-    //     }
-    //     const result = await appointmentOptionCollection.updateMany(filter, updatedDoc, options);
-    //     res.send(result);
-    // })
-
-    app.get("/doctors", async (req, res) => {
-      console.log(req);
-
-      const query = {};
-      const doctors = await doctorsCollection.find(query).toArray();
-      res.send(doctors);
+    // Logout API (Frontend should handle token removal)
+    app.post("/api/auth/logout", (req, res) => {
+      res.json({ message: "Logged out successfully" });
     });
 
-    app.post("/doctors", verifyJWT, verifyAdmin, async (req, res) => {
-      const doctor = req.body;
-      const result = await doctorsCollection.insertOne(doctor);
-      res.send(result);
+    // 5.2 Patient Routes
+
+    // Get list of available doctors
+    app.get("/api/doctors", async (req, res) => {
+      const doctors = await doctorCollection.find().toArray();
+      res.status(200).json({
+        message: "List of available doctors",
+        data: doctors,
+      });
     });
 
-    app.delete("/doctors/:id", verifyJWT, verifyAdmin, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: ObjectId(id) };
-      const result = await doctorsCollection.deleteOne(filter);
-      res.send(result);
+    // Book an appointment
+    app.post("/api/appointments", async (req, res) => {
+      const { doctorId, patientId, dateTime } = req.body;
+      const newAppointment = {
+        doctorId,
+        patientId,
+        dateTime,
+        status: "booked",
+      };
+
+      const result = await appointmentCollection.insertOne(newAppointment);
+      res.status(201).json({
+        message: "Appointment booked successfully",
+        appointment: result.ops[0],
+      });
+    });
+
+    // View appointments
+    app.get("/api/appointments", async (req, res) => {
+      const { patientId } = req.query;
+      const appointments = await appointmentCollection
+        .find({ patientId: ObjectId(patientId) })
+        .toArray();
+      res.status(200).json({
+        message: "List of appointments",
+        data: appointments,
+      });
+    });
+
+    // Cancel or reschedule an appointment
+    app.put("/api/appointments/:id", async (req, res) => {
+      const { id } = req.params;
+      const { newDateTime, status } = req.body;
+
+      const updateData = {};
+      if (newDateTime) updateData.dateTime = newDateTime;
+      if (status) updateData.status = status;
+
+      const result = await appointmentCollection.updateOne(
+        { _id: ObjectId(id) },
+        { $set: updateData }
+      );
+
+      if (result.modifiedCount > 0) {
+        res
+          .status(200)
+          .json({ message: `Appointment ${id} updated successfully` });
+      } else {
+        res.status(400).json({ message: "Appointment update failed" });
+      }
+    });
+
+    // main route call
+    app.get("/", (req, res) => {
+      res.send("Doctors portal server is running");
     });
   } finally {
   }
 }
 run().catch(console.log);
 
-app.get("/", async (req, res) => {
-  res.send("doctors portal server is running");
-});
-
-app.listen(port, () => console.log(`Doctors portal running on ${port}`));
+app.listen(port, () => console.log(`Server running on port ${port}`));
