@@ -32,17 +32,46 @@ async function run() {
     // 5.1 Authentication
     // Register API
     app.post("/api/auth/register", async (req, res) => {
-      const { name, email, password, role } = req.body;
+      const { name, email, password, role, specialty, location, availability } =
+        req.body;
 
+      // Check if user already exists
       const existingUser = await userCollection.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
 
+      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user object
       const newUser = { name, email, password: hashedPassword, role };
-      const result = await userCollection.insertOne(newUser);
-      res.status(201).json({ message: "User registered successfully" });
+
+      try {
+        // If the user is a doctor, add the doctor data to the doctorCollection
+        if (role === "doctor") {
+          // Create doctor-specific data
+          const doctorData = {
+            name,
+            email,
+            specialty,
+            location,
+            availability,
+            rating: 0,
+            reviews: [],
+          };
+
+          const doctorCollection = client.db("doctordb").collection("doctors");
+          await doctorCollection.insertOne(doctorData);
+        }
+
+        await userCollection.insertOne(newUser);
+
+        res.status(201).json({ message: "User registered successfully" });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+      }
     });
 
     // Login API
@@ -83,13 +112,7 @@ async function run() {
     // 5.2 Patient Routes
 
     // Get list of available doctors
-    app.post("/api/doctors", async (req, res) => {
-      const doctors = await doctorCollection.find().toArray();
-      res.status(200).json({
-        message: "List of available doctors",
-        data: doctors,
-      });
-    });
+
     app.get("/api/doctors", async (req, res) => {
       const doctors = await doctorCollection.find().toArray();
       res.status(200).json({
@@ -108,23 +131,50 @@ async function run() {
         status: "booked",
       };
 
-      const result = await appointmentCollection.insertOne(newAppointment);
-      res.status(201).json({
-        message: "Appointment booked successfully",
-        appointment: result.ops[0],
-      });
+      try {
+        const result = await appointmentCollection.insertOne(newAppointment);
+
+        const appointment = await appointmentCollection.findOne({
+          _id: result.insertedId,
+        });
+
+        res.status(201).json({
+          message: "Appointment booked successfully",
+          appointment,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error booking appointment" });
+      }
     });
 
     // View appointments
     app.get("/api/appointments", async (req, res) => {
-      const { patientId } = req.query;
-      const appointments = await appointmentCollection
-        .find({ patientId: ObjectId(patientId) })
-        .toArray();
-      res.status(200).json({
-        message: "List of appointments",
-        data: appointments,
-      });
+      try {
+        const { patientId } = req.query;
+        console.log(patientId);
+
+        if (!patientId) {
+          return res.status(400).json({ message: "Patient ID is required" });
+        }
+
+        const appointments = await appointmentCollection
+          .find({ patientId: new ObjectId(patientId) })
+          .toArray();
+
+        console.log(appointments);
+        if (appointments.length === 0) {
+          return res.status(404).json({ message: "No appointments found" });
+        }
+
+        res.status(200).json({
+          message: "List of appointments",
+          data: appointments,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error fetching appointments" });
+      }
     });
 
     // Cancel or reschedule an appointment
@@ -147,6 +197,95 @@ async function run() {
           .json({ message: `Appointment ${id} updated successfully` });
       } else {
         res.status(400).json({ message: "Appointment update failed" });
+      }
+    });
+
+    // 5.3 Doctors Routes
+    app.get("/api/appointments", async (req, res) => {
+      const { doctorId } = req.query; // The doctor's ID will be passed as a query parameter
+
+      if (!doctorId) {
+        return res.status(400).json({ message: "Doctor ID is required" });
+      }
+
+      try {
+        const appointments = await appointmentCollection
+          .find({ doctorId: new ObjectId(doctorId) }) // Assuming doctorId is stored in the appointment
+          .toArray();
+
+        res.status(200).json({
+          message: "List of appointments",
+          data: appointments,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error fetching appointments" });
+      }
+    });
+    // / Approve or reject
+    app.put("/api/appointments/:id/status", async (req, res) => {
+      const { id } = req.params; // The appointment ID passed as a parameter
+      const { status } = req.body; // The status to update (approve or reject)
+
+      if (!status || !["approved", "rejected"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      try {
+        const updatedAppointment = await appointmentCollection.findOneAndUpdate(
+          { _id: new ObjectId(id) },
+          { $set: { status } },
+          { returnDocument: "after" } // Return the updated appointment
+        );
+
+        if (!updatedAppointment.value) {
+          return res.status(404).json({ message: "Appointment not found" });
+        }
+
+        res.status(200).json({
+          message: "Appointment status updated successfully",
+          appointment: updatedAppointment.value,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error updating appointment status" });
+      }
+    });
+
+    // Admin Routes
+    app.get("/api/users", async (req, res) => {
+      try {
+        const users = await userCollection.find().toArray();
+        res.status(200).json({
+          message: "List of all users",
+          data: users,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error fetching users" });
+      }
+    });
+    app.get("/api/reports", async (req, res) => {
+      try {
+        const userCount = await userCollection.countDocuments();
+        const appointmentCount = await appointmentCollection.countDocuments();
+        const doctorCount = await userCollection.countDocuments({
+          role: "doctor",
+        });
+
+        const analytics = {
+          totalUsers: userCount,
+          totalAppointments: appointmentCount,
+          totalDoctors: doctorCount,
+        };
+
+        res.status(200).json({
+          message: "System Analytics",
+          data: analytics,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error fetching system analytics" });
       }
     });
 
