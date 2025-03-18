@@ -32,23 +32,25 @@ async function run() {
     app.post("/api/auth/register", async (req, res) => {
       const { name, email, password, role, specialty, location, availability } =
         req.body;
-
-      // Check if user already exists
-      const existingUser = await userCollection.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
-      }
-
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Create user object
-      const newUser = { name, email, password: hashedPassword, role };
+      console.log(email);
 
       try {
-        // If the user is a doctor, add the doctor data to the doctorCollection
+        // Check if user already exists
+        const existingUser = await userCollection.findOne({ email });
+        if (existingUser) {
+          return res.status(400).json({ message: "User already exists" });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create user object
+        const newUser = { name, email, password: hashedPassword, role };
+
+        let insertedUser;
+
+        // If role is doctor, store doctor details separately
         if (role === "doctor") {
-          // Create doctor-specific data
           const doctorData = {
             name,
             email,
@@ -63,11 +65,24 @@ async function run() {
           await doctorCollection.insertOne(doctorData);
         }
 
-        await userCollection.insertOne(newUser);
+        const result = await userCollection.insertOne(newUser);
+        insertedUser = { id: result.insertedId, name, email, role };
 
-        res.status(201).json({ message: "User registered successfully" });
+        // Generate JWT token
+        const token = jwt.sign(
+          { id: insertedUser.id, email: insertedUser.email },
+          process.env.JWT_SECRET,
+          { expiresIn: "1h" }
+        );
+
+        // Send response
+        res.status(201).json({
+          token,
+          data: insertedUser,
+          message: "User registered successfully",
+        });
       } catch (error) {
-        console.error(error);
+        console.error("Registration error:", error);
         res.status(500).json({ message: "Server error" });
       }
     });

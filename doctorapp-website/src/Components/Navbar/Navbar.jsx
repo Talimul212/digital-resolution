@@ -1,6 +1,16 @@
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove token from local storage
+    alert("You have been logged out.");
+    navigate("/login"); // Redirect to login page
+  };
+
   return (
     <div>
       <div className="navbar bg-base-100 shadow-sm">
@@ -14,13 +24,12 @@ const Navbar = () => {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                {" "}
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
                   d="M4 6h16M4 12h8m-8 6h16"
-                />{" "}
+                />
               </svg>
             </div>
             <ul
@@ -72,7 +81,15 @@ const Navbar = () => {
           </ul>
         </div>
         <div className="navbar-end">
-          <a className="btn">Button</a>
+          {localStorage.token ? (
+            <button onClick={handleLogout} className="btn">
+              LogOut
+            </button>
+          ) : (
+            <Link to="/login" className="btn">
+              Login
+            </Link>
+          )}
         </div>
       </div>
     </div>
