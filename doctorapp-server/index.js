@@ -17,8 +17,6 @@ const client = new MongoClient(process.env.MONGO_URI, {
   useUnifiedTopology: true,
 });
 
-console.log(process.env.MONGO_URI);
-
 async function run() {
   try {
     await client.connect();
