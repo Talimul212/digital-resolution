@@ -4,6 +4,7 @@ import Main from "../Layout/Main/Main";
 import HomeList from "../Pages/Home/HomeList";
 import Login from "../Pages/Auth/Login";
 import Resgister from "../Pages/Auth/Resgister";
+import DoctorsList from "../Pages/DoctorsList/DoctorsList";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
       {
         path: "/signup",
         element: <Resgister />,
+      },
+      {
+        path: "/doctorslist",
+        element: <DoctorsList />,
       },
     ],
   },

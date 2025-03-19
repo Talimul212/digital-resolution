@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { baseURL } from "../../utility/Api/BaseURl";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -32,7 +33,7 @@ const Login = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      alert("Login successful!");
+      toast.success("Login successful!");
       console.log("Logged-in user:", data.user);
 
       // Redirect or perform actions after login

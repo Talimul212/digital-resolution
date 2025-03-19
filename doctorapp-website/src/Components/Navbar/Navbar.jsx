@@ -1,19 +1,20 @@
 import React from "react";
+import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
-
+import logo from "../../assets/logo.png";
 const Navbar = () => {
   const navigate = useNavigate();
 
   // Logout function
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove token from local storage
-    alert("You have been logged out.");
+    toast.success("You have been logged out.");
     navigate("/login"); // Redirect to login page
   };
 
   return (
     <div>
-      <div className="navbar bg-base-100 shadow-sm">
+      <div className="navbar shadow-sm bg-[#5caff388]">
         <div className="navbar-start">
           <div className="dropdown">
             <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -37,7 +38,7 @@ const Navbar = () => {
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
             >
               <li>
-                <a>Item 1</a>
+                <a>Doctors</a>
               </li>
               <li>
                 <a>Parent</a>
@@ -55,28 +56,26 @@ const Navbar = () => {
               </li>
             </ul>
           </div>
-          <a className="btn btn-ghost text-xl">daisyUI</a>
+          <Link
+            className="md:flex cursor-pointer hidden  bg-amber-50  absolute mt-[-2px] pt-3 px-5 ms-[10px] h-[100px]  rounded-b-2xl border-[#5caff3] border-b-[1px] duration-300 justify-center items-center"
+            to="/"
+          >
+            <img src={logo} className="w-16" alt="" srcset="" />
+            <p className="text-2xl hidden md:block uppercase tracking-[.28em] font-bold text-[#5caff3]">
+              Esefa
+            </p>
+          </Link>
         </div>
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">
-            <li>
-              <a>Item 1</a>
+            <li className="  text-md font-bold text-white">
+              <Link to="/doctorslist">Doctors</Link>
             </li>
-            <li>
-              <details>
-                <summary>Parent</summary>
-                <ul className="p-2">
-                  <li>
-                    <a>Submenu 1</a>
-                  </li>
-                  <li>
-                    <a>Submenu 2</a>
-                  </li>
-                </ul>
-              </details>
+            <li className=" font-bold text-md text-white">
+              <Link to="/contact">Contact</Link>
             </li>
-            <li>
-              <a>Item 3</a>
+            <li className="  text-md font-bold text-white">
+              <Link to="/aboutus">About Us</Link>
             </li>
           </ul>
         </div>

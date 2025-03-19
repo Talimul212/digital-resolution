@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { baseURL } from "../../utility/Api/BaseURl";
+import toast from "react-hot-toast";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -32,14 +33,14 @@ const Register = () => {
       const data = await response.json();
       if (response.ok) {
         localStorage.setItem("token", data.token);
-        alert("Registration successful!");
+        toast.success("Registration successful!");
         navigate("/"); // Redirect to home
       } else {
-        alert(`Error: ${data.message}`);
+        toast.error(`Error: ${data.message}`);
       }
     } catch (error) {
       console.error("Registration error:", error);
-      alert("Something went wrong!");
+      toast.error("Something went wrong!");
     }
   };
 
