@@ -81,9 +81,14 @@ const Navbar = () => {
         </div>
         <div className="navbar-end">
           {localStorage.token ? (
-            <button onClick={handleLogout} className="btn">
-              LogOut
-            </button>
+            <>
+              <Link className="btn bg-white me-2" to="/profile">
+                profile
+              </Link>
+              <button onClick={handleLogout} className="btn bg-white">
+                LogOut
+              </button>
+            </>
           ) : (
             <Link to="/login" className="btn">
               Login

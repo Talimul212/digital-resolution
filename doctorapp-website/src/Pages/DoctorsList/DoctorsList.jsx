@@ -62,7 +62,10 @@ const DoctorsList = () => {
               <strong>Location:</strong> {doctor?.location}
             </p>
             <Link
-              to="/appointmentForm"
+              to={{
+                pathname: "/appointmentForm",
+              }}
+              state={{ doctor }}
               className="p-2 text-amber-50 bg-[#5caff388] rounded  cursor-pointer font-bold"
             >
               Appointment

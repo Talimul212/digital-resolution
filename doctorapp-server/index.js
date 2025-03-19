@@ -117,15 +117,7 @@ async function run() {
       });
     });
 
-    // Logout API (Frontend should handle token removal)
-    app.post("/api/auth/logout", (req, res) => {
-      res.json({ message: "Logged out successfully" });
-    });
-
     // 5.2 Patient Routes
-
-    // Get list of available doctors
-
     app.get("/api/doctors", async (req, res) => {
       const doctors = await doctorCollection.find().toArray();
       res.status(200).json({
@@ -136,17 +128,36 @@ async function run() {
 
     // Book an appointment
     app.post("/api/appointments", async (req, res) => {
-      const { doctorId, patientId, dateTime } = req.body;
-      const newAppointment = {
-        doctorId,
-        patientId,
-        dateTime,
-        status: "booked",
-      };
-
       try {
+        const { doctorId, patientId, dateTime, contact, gender, address } =
+          req.body;
+
+        // Ensure all required fields are provided
+        if (
+          !doctorId ||
+          !patientId ||
+          !dateTime ||
+          !contact ||
+          !gender ||
+          !address
+        ) {
+          return res.status(400).json({ message: "All fields are required" });
+        }
+
+        const newAppointment = {
+          doctorId,
+          patientId,
+          dateTime,
+          contact,
+          gender,
+          address,
+          status: "booked", // Automatically setting status as 'booked'
+        };
+
+        // Insert appointment into the database
         const result = await appointmentCollection.insertOne(newAppointment);
 
+        // Retrieve the inserted appointment
         const appointment = await appointmentCollection.findOne({
           _id: result.insertedId,
         });
@@ -156,7 +167,7 @@ async function run() {
           appointment,
         });
       } catch (error) {
-        console.error(error);
+        console.error("Error booking appointment:", error);
         res.status(500).json({ message: "Error booking appointment" });
       }
     });
@@ -165,17 +176,16 @@ async function run() {
     app.get("/api/appointments", async (req, res) => {
       try {
         const { patientId } = req.query;
-        console.log(patientId);
 
         if (!patientId) {
           return res.status(400).json({ message: "Patient ID is required" });
         }
 
+        // Query using patientId as a string
         const appointments = await appointmentCollection
-          .find({ patientId: new ObjectId(patientId) })
+          .find({ patientId })
           .toArray();
 
-        console.log(appointments);
         if (appointments.length === 0) {
           return res.status(404).json({ message: "No appointments found" });
         }
@@ -190,7 +200,7 @@ async function run() {
       }
     });
 
-    // Cancel or reschedule an appointment
+    // Cancel or reschedule
     app.put("/api/appointments/:id", async (req, res) => {
       const { id } = req.params;
       const { newDateTime, status } = req.body;
@@ -301,7 +311,32 @@ async function run() {
         res.status(500).json({ message: "Error fetching system analytics" });
       }
     });
+    //doctors
+    app.get("/api/doctors/:doctorId", async (req, res) => {
+      try {
+        const { doctorId } = req.params;
 
+        if (!ObjectId.isValid(doctorId)) {
+          return res.status(400).json({ message: "Invalid Doctor ID" });
+        }
+
+        const doctor = await doctorCollection.findOne({
+          _id: new ObjectId(doctorId),
+        });
+
+        if (!doctor) {
+          return res.status(404).json({ message: "Doctor not found" });
+        }
+
+        res.status(200).json({
+          message: "Doctor details retrieved successfully",
+          data: doctor,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error fetching doctor details" });
+      }
+    });
     // main route call
     app.get("/", (req, res) => {
       res.send("Doctors portal server is running");

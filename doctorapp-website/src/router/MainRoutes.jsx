@@ -5,6 +5,10 @@ import HomeList from "../Pages/Home/HomeList";
 import Login from "../Pages/Auth/Login";
 import Resgister from "../Pages/Auth/Resgister";
 import DoctorsList from "../Pages/DoctorsList/DoctorsList";
+import AppointmentFrom from "../Components/Form/AppointmentFrom";
+import ProfileLayout from "../Layout/ProfileLayout/ProfileLayout";
+import Profile from "../Pages/Module/Profile/Profile";
+import AllAppointment from "../Pages/Module/Patient/AllAppointment";
 
 const router = createBrowserRouter([
   {
@@ -27,6 +31,25 @@ const router = createBrowserRouter([
       {
         path: "/doctorslist",
         element: <DoctorsList />,
+      },
+      {
+        path: "/appointmentForm",
+        element: <AppointmentFrom />,
+      },
+    ],
+  },
+  {
+    path: "/profile",
+    element: <ProfileLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/profile/details",
+        element: <Profile />,
+      },
+      {
+        path: "/profile/allappointmen",
+        element: <AllAppointment />,
       },
     ],
   },
