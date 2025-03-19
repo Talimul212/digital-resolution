@@ -39,7 +39,7 @@ const AppointmentForm = () => {
       doctorId: doctor?._id, // Assuming doctor object contains _id
       patientId: storedUser?.id, // Assuming storedUser contains _id
       dateTime: doctor?.availability?.[0] || new Date().toISOString(), // Select first available date or fallback to current date
-      status: "booked",
+      status: "Pending",
       contact: formData.contact,
       gender: formData.gender,
       address: formData.address,

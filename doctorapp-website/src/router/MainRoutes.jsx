@@ -9,6 +9,7 @@ import AppointmentFrom from "../Components/Form/AppointmentFrom";
 import ProfileLayout from "../Layout/ProfileLayout/ProfileLayout";
 import Profile from "../Pages/Module/Profile/Profile";
 import AllAppointment from "../Pages/Module/Patient/AllAppointment";
+import Review from "../Pages/Module/Patient/Review";
 
 const router = createBrowserRouter([
   {
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
       {
         path: "/profile/allappointmen",
         element: <AllAppointment />,
+      },
+      {
+        path: "/profile/reviews",
+        element: <Review />,
       },
     ],
   },

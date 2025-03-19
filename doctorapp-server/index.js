@@ -151,7 +151,7 @@ async function run() {
           contact,
           gender,
           address,
-          status: "booked", // Automatically setting status as 'booked'
+          status: "pending", // Automatically setting status as 'booked'
         };
 
         // Insert appointment into the database
@@ -204,6 +204,7 @@ async function run() {
     app.put("/api/appointments/:id", async (req, res) => {
       const { id } = req.params;
       const { newDateTime, status } = req.body;
+      console.log(id);
 
       const updateData = {};
       if (newDateTime) updateData.dateTime = newDateTime;

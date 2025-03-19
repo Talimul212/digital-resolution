@@ -1,9 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
 import { MdOutlineEdit, MdDeleteOutline } from "react-icons/md";
 import { IoEyeOutline } from "react-icons/io5";
+
 const AppointmentTable = ({ appointments, doctorDetails }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const cancelOrRescheduleAppointment = async (
+    appointmentId,
+    status,
+    newDateTime = null
+  ) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status, newDateTime }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update the appointment");
+      }
+
+      const result = await response.json();
+      alert(result.message); // Show success message
+      // Optionally, you can refresh the appointments list or make necessary updates
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
+      {loading && <div>Loading...</div>}
+      {error && <div>Error: {error}</div>}
       {appointments.length === 0 ? (
         <p>No appointments found.</p>
       ) : (
@@ -61,12 +96,25 @@ const AppointmentTable = ({ appointments, doctorDetails }) => {
                     <p
                       title="Cancel"
                       className="text-gray-100 text-lg hover:scale-50 duration-300 cursor-pointer bg-red-400 p-1 rounded"
+                      onClick={() =>
+                        cancelOrRescheduleAppointment(
+                          appointment._id,
+                          "Cancelled"
+                        )
+                      }
                     >
                       <MdDeleteOutline />
                     </p>
                     <p
                       title="Reschedule"
                       className="text-gray-800 text-lg hover:scale-50 duration-300 cursor-pointer bg-sky-200 p-1 rounded"
+                      onClick={() =>
+                        cancelOrRescheduleAppointment(
+                          appointment._id,
+                          "Rescheduled",
+                          new Date().toISOString() // For example, reschedule to current date-time
+                        )
+                      }
                     >
                       <IoEyeOutline />
                     </p>
