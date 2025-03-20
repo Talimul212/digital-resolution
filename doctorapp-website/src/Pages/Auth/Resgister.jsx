@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { baseURL } from "../../utility/Api/BaseURl";
 import toast from "react-hot-toast";
-
+import logo from "../../assets/logo.png";
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -47,11 +47,7 @@ const Register = () => {
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 lg:px-8">
       <div className="sm:mx-auto mt-3 sm:w-full sm:max-w-sm">
-        <img
-          alt="Your Company"
-          src="bycicle.png"
-          className="mx-auto h-20 w-auto"
-        />
+        <img alt="Your Company" src={logo} className="mx-auto h-20 w-auto" />
         <h2 className="mt-5 text-center text-2xl font-bold tracking-tight text-gray-900">
           Register to Create an Account
         </h2>
@@ -134,11 +130,25 @@ const Register = () => {
 
           <button
             type="submit"
-            className="flex w-full justify-center rounded-md bg-[#e5646e] px-3 py-1.5 text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-indigo-600"
+            className="flex w-full  bg-[#5caff388] hover:bg-[#5caff3e8] justify-center rounded-md  px-3 py-1.5 text-white shadow-xs  focus-visible:outline-indigo-600"
           >
             Register
           </button>
         </form>
+        <p className="my-5 font-semibold text-center text-sm text-gray-500">
+          Already have an account? Go to
+          <span>
+            <p></p>
+            <Link
+              to="/login"
+              className="font-semibold cursor-pointer text-[#5caff3e8]"
+            >
+              Login
+            </Link>
+            <span> </span>
+          </span>
+          page
+        </p>
       </div>
     </div>
   );

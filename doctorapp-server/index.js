@@ -289,6 +289,42 @@ async function run() {
         res.status(500).json({ message: "Error fetching users" });
       }
     });
+
+    app.get("/api/admin/appointments", async (req, res) => {
+      try {
+        const { patientId } = req.query;
+        console.log(patientId);
+
+        if (!patientId) {
+          return res.status(400).json({ message: "Patient ID is required" });
+        }
+
+        // Check if the user is an admin
+        const user = await userCollection.find({ _id: patientId });
+
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        let query = {};
+
+        // Only admins can see all appointments
+        if (user.role !== "admin") {
+          query.patientId = patientId;
+        }
+
+        const appointments = await appointmentCollection.find().toArray();
+
+        res.status(200).json({
+          message: "List of appointments",
+          data: appointments,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error fetching appointments" });
+      }
+    });
+
     app.get("/api/reports", async (req, res) => {
       try {
         const userCount = await userCollection.countDocuments();

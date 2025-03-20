@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { baseURL } from "../../utility/Api/BaseURl";
 import toast from "react-hot-toast";
-
+import logo from "../../assets/logo.png";
+import { Link } from "react-router-dom";
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -49,11 +50,7 @@ const Login = () => {
     <div>
       <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-          <img
-            alt="Your Company"
-            src="bycicle.png"
-            className="mx-auto h-20 w-auto"
-          />
+          <img alt="Your Company" src={logo} className="mx-auto h-20 w-auto" />
           <h2 className="mt-8 text-center text-2xl font-bold tracking-tight text-gray-900">
             Login to your account
           </h2>
@@ -108,7 +105,7 @@ const Login = () => {
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-[#e5646e] px-3 py-1.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500"
+                className="flex w-full justify-center rounded-md bg-[#5caff388] px-3 py-1.5 text-sm font-semibold text-white shadow-xs hover:bg-[#5caff3e8]"
                 disabled={loading}
               >
                 {loading ? "Logging in..." : "Login"}
@@ -116,14 +113,16 @@ const Login = () => {
             </div>
           </form>
 
-          <p className="mt-10 text-center text-sm text-gray-500">
-            Not a member?{" "}
-            <a
-              href="#"
-              className="font-semibold text-indigo-600 hover:text-indigo-500"
+          <p className="my-5 font-semibold text-center text-sm text-gray-500">
+            Dont have an account to{" "}
+            <span className="text-[#5caff3e8]">ESEFA</span>? Please go to
+            <span> </span>
+            <Link
+              to="/signup"
+              className="font-semibold cursor-pointer text-[#5caff3e8]"
             >
-              Start a 14-day free trial
-            </a>
+              Register
+            </Link>
           </p>
         </div>
       </div>

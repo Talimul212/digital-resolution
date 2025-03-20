@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { MdOutlineEdit, MdDeleteOutline } from "react-icons/md";
 import { IoEyeOutline } from "react-icons/io5";
+import { baseURL } from "../../utility/Api/BaseURl";
 
 const AppointmentTable = ({ appointments, doctorDetails }) => {
   const [loading, setLoading] = useState(false);
@@ -13,7 +14,7 @@ const AppointmentTable = ({ appointments, doctorDetails }) => {
   ) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/appointments/${appointmentId}`, {
+      const response = await fetch(`${baseURL}appointments/${appointmentId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

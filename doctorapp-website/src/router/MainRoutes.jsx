@@ -10,6 +10,9 @@ import ProfileLayout from "../Layout/ProfileLayout/ProfileLayout";
 import Profile from "../Pages/Module/Profile/Profile";
 import AllAppointment from "../Pages/Module/Patient/AllAppointment";
 import Review from "../Pages/Module/Patient/Review";
+import AllUser from "../Pages/Module/Admin/AllUser";
+import AllDoctor from "../Pages/Module/Admin/AllDoctor";
+import AllAppointments from "../Pages/Module/Admin/AllAppointments";
 
 const router = createBrowserRouter([
   {
@@ -55,6 +58,18 @@ const router = createBrowserRouter([
       {
         path: "/profile/reviews",
         element: <Review />,
+      },
+      {
+        path: "/profile/alluser",
+        element: <AllUser />,
+      },
+      {
+        path: "/profile/alldoctor",
+        element: <AllDoctor />,
+      },
+      {
+        path: "/profile/allappointment",
+        element: <AllAppointments />,
       },
     ],
   },
