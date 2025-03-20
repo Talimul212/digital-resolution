@@ -2,6 +2,9 @@ import React from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
+import { IoIosLogOut } from "react-icons/io";
+import { CgProfile } from "react-icons/cg";
+import { AiOutlineLogin } from "react-icons/ai";
 const Navbar = () => {
   const navigate = useNavigate();
 
@@ -82,16 +85,28 @@ const Navbar = () => {
         <div className="navbar-end">
           {localStorage.token ? (
             <>
-              <Link className="btn bg-white me-2" to="/profile">
-                profile
+              <Link
+                title="Profile"
+                className=" border-[1px] border-gray-200 p-1 rounded-full me-2"
+                to="/profile"
+              >
+                <CgProfile size={25} color="white" />
               </Link>
-              <button onClick={handleLogout} className="btn bg-white">
-                LogOut
+              <button
+                title="Logout"
+                onClick={handleLogout}
+                className="border-[1px] me-1 border-gray-200 p-1 rounded-full"
+              >
+                <IoIosLogOut size={25} color="white" />
               </button>
             </>
           ) : (
-            <Link to="/login" className="btn">
-              Login
+            <Link
+              title="Login"
+              to="/login"
+              className="border-[1px] me-1 border-gray-200 p-1 rounded-full"
+            >
+              <AiOutlineLogin size={25} color="white" />
             </Link>
           )}
         </div>

@@ -173,11 +173,12 @@ const AppointmentForm = () => {
 
             <div className="w-full mt-5">
               <label className="block text-sm/6 font-medium text-gray-900">
-                Address
+                Description
               </label>
               <textarea
                 name="address"
                 rows={3}
+                placeholder="describe your symptomps clearly"
                 value={formData.address}
                 onChange={handleChange}
                 className="block w-full border-[1px] borer-[#5caff388] rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-gray-300 focus:outline-[#5caff388] sm:text-sm/6"

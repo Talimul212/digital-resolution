@@ -374,6 +374,80 @@ async function run() {
         res.status(500).json({ message: "Error fetching doctor details" });
       }
     });
+    //appoved
+    app.put("/api/admin/doctors/:doctorId", async (req, res) => {
+      try {
+        const { doctorId } = req.params;
+
+        if (!ObjectId.isValid(doctorId)) {
+          return res.status(400).json({ message: "Invalid Doctor ID" });
+        }
+
+        const updatedDoctor = await doctorCollection.findOneAndUpdate(
+          { _id: new ObjectId(doctorId) },
+          { $set: { registrations: "Approved" } }, // ✅ Update the 'registrations' field
+          { returnDocument: "after" } // Return updated document
+        );
+
+        if (!updatedDoctor) {
+          return res.status(404).json({ message: "Doctor not found" });
+        }
+
+        res.status(200).json({
+          message: "Doctor registration approved successfully",
+          data: updatedDoctor,
+        });
+      } catch (error) {
+        console.error("Error approving doctor registration:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+    // delete
+    app.delete("/api/admin/doctors/:doctorId", async (req, res) => {
+      try {
+        const { doctorId } = req.params;
+
+        if (!ObjectId.isValid(doctorId)) {
+          return res.status(400).json({ message: "Invalid Doctor ID" });
+        }
+
+        const deletedDoctor = await doctorCollection.findOneAndDelete({
+          _id: new ObjectId(doctorId),
+        });
+
+        if (!deletedDoctor) {
+          return res.status(404).json({ message: "Doctor not found" });
+        }
+
+        res.status(200).json({ message: "Doctor deleted successfully" });
+      } catch (error) {
+        console.error("Error deleting doctor:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+    app.delete("/api/admin/user/:doctorId", async (req, res) => {
+      try {
+        const { doctorId } = req.params;
+
+        if (!ObjectId.isValid(doctorId)) {
+          return res.status(400).json({ message: "Invalid Doctor ID" });
+        }
+
+        const deletedDoctor = await userCollection.findOneAndDelete({
+          _id: new ObjectId(doctorId),
+        });
+
+        if (!deletedDoctor) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({ message: "User deleted successfully" });
+      } catch (error) {
+        console.error("Error deleting User:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
     // main route call
     app.get("/", (req, res) => {
       res.send("Doctors portal server is running");

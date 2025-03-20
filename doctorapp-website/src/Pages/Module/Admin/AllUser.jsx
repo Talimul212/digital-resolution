@@ -8,28 +8,32 @@ const AllUser = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch(`${baseURL}users`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch users");
-        }
-        const data = await response.json();
-        setUsers(data?.data);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`${baseURL}users`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch users");
+      }
+      const data = await response.json();
+      setUsers(data?.data);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="mt-10 px-5">
       <h2 className="text-2xl font-bold mb-4">Users Management List</h2>
-      <UsersTable error={error} loading={loading} users={users} />
+      <UsersTable
+        fetchUsers={fetchUsers}
+        error={error}
+        loading={loading}
+        users={users}
+      />
     </div>
   );
 };

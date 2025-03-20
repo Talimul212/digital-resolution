@@ -46,19 +46,19 @@ const ReviewTable = ({ appointments, doctorDetails }) => {
                     <div className="flex justify-start gap-4 items-center">
                       <p
                         title="Edit"
-                        className="text-gray-100 text-lg hover:scale-50 duration-300 cursor-pointer bg-green-400 p-1 rounded"
+                        className="text-gray-100 text-lg hover:scale-150 duration-300 cursor-pointer bg-green-400 p-1 rounded"
                       >
                         <MdOutlineEdit />
                       </p>
                       <p
                         title="Cancel"
-                        className="text-gray-100 text-lg hover:scale-50 duration-300 cursor-pointer bg-red-400 p-1 rounded"
+                        className="text-gray-100 text-lg hover:scale-150 duration-300 cursor-pointer bg-red-400 p-1 rounded"
                       >
                         <MdDeleteOutline />
                       </p>
                       <p
                         title="Reschedule"
-                        className="text-gray-800 text-lg hover:scale-50 duration-300 cursor-pointer bg-sky-200 p-1 rounded"
+                        className="text-gray-800 text-lg hover:scale-150 duration-300 cursor-pointer bg-sky-200 p-1 rounded"
                       >
                         <IoEyeOutline />
                       </p>

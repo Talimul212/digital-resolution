@@ -37,7 +37,11 @@ const Information = () => {
           <InfoCard key={card.id} card={card} />
         ))}
       </div>
-      <img className="w-24 md:w-30 ms-24 hidden md:block" src={quote} alt="" />
+      <img
+        className="w-24 md:w-30 ms-24 hidden rotate-180 md:block"
+        src={quote}
+        alt=""
+      />
     </div>
   );
 };
