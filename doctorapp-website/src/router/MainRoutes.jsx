@@ -13,6 +13,7 @@ import Review from "../Pages/Module/Patient/Review";
 import AllUser from "../Pages/Module/Admin/AllUser";
 import AllDoctor from "../Pages/Module/Admin/AllDoctor";
 import AllAppointments from "../Pages/Module/Admin/AllAppointments";
+import WelcomePage from "../Pages/Module/Profile/WelcomePage";
 
 const router = createBrowserRouter([
   {
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
     element: <ProfileLayout />,
     errorElement: <ErrorPage />,
     children: [
+      {
+        path: "/profile",
+        element: <WelcomePage />,
+      },
       {
         path: "/profile/details",
         element: <Profile />,

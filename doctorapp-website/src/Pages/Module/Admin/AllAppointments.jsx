@@ -57,12 +57,14 @@ const AllAppointments = () => {
   };
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (error) return <div>Errr: {error}</div>;
 
   return (
     <div className="mt-10 px-5">
       <h2 className="text-2xl font-bold mb-4">Appointments</h2>
       <AppointmentTable
+        storedUser={storedUser}
+        setAppointments={setAppointments}
         appointments={appointments}
         doctorDetails={doctorDetails}
       />

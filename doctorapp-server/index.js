@@ -19,7 +19,6 @@ const client = new MongoClient(process.env.MONGO_URI, {
 
 async function run() {
   try {
-    await client.connect();
     // collection list
     const userCollection = client.db("doctordb").collection("users");
     const doctorCollection = client.db("doctordb").collection("doctors");
@@ -27,15 +26,12 @@ async function run() {
       .db("doctordb")
       .collection("appointments");
 
-    // 5.1 Authentication
     // Register API
     app.post("/api/auth/register", async (req, res) => {
       const { name, email, password, role, specialty, location, availability } =
         req.body;
-      console.log(email);
 
       try {
-        // Check if user already exists
         const existingUser = await userCollection.findOne({ email });
         if (existingUser) {
           return res.status(400).json({ message: "User already exists" });
@@ -44,10 +40,7 @@ async function run() {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create user object
         const newUser = { name, email, password: hashedPassword, role };
-
-        let insertedUser;
 
         // If role is doctor, store doctor details separately
         if (role === "doctor") {
@@ -60,13 +53,11 @@ async function run() {
             rating: 0,
             reviews: [],
           };
-
-          const doctorCollection = client.db("doctordb").collection("doctors");
           await doctorCollection.insertOne(doctorData);
         }
 
         const result = await userCollection.insertOne(newUser);
-        insertedUser = { id: result.insertedId, name, email, role };
+        const insertedUser = { id: result.insertedId, name, email, role };
 
         // Generate JWT token
         const token = jwt.sign(
@@ -75,7 +66,6 @@ async function run() {
           { expiresIn: "1h" }
         );
 
-        // Send response
         res.status(201).json({
           token,
           data: insertedUser,
@@ -117,7 +107,7 @@ async function run() {
       });
     });
 
-    // 5.2 Patient Routes
+    // Patient Routes
     app.get("/api/doctors", async (req, res) => {
       const doctors = await doctorCollection.find().toArray();
       res.status(200).json({
@@ -132,7 +122,6 @@ async function run() {
         const { doctorId, patientId, dateTime, contact, gender, address } =
           req.body;
 
-        // Ensure all required fields are provided
         if (
           !doctorId ||
           !patientId ||
@@ -151,13 +140,10 @@ async function run() {
           contact,
           gender,
           address,
-          status: "pending", // Automatically setting status as 'booked'
+          status: "pending",
         };
 
-        // Insert appointment into the database
         const result = await appointmentCollection.insertOne(newAppointment);
-
-        // Retrieve the inserted appointment
         const appointment = await appointmentCollection.findOne({
           _id: result.insertedId,
         });
@@ -181,7 +167,6 @@ async function run() {
           return res.status(400).json({ message: "Patient ID is required" });
         }
 
-        // Query using patientId as a string
         const appointments = await appointmentCollection
           .find({ patientId })
           .toArray();
@@ -204,7 +189,6 @@ async function run() {
     app.put("/api/appointments/:id", async (req, res) => {
       const { id } = req.params;
       const { newDateTime, status } = req.body;
-      console.log(id);
 
       const updateData = {};
       if (newDateTime) updateData.dateTime = newDateTime;
@@ -224,58 +208,6 @@ async function run() {
       }
     });
 
-    // 5.3 Doctors Routes
-    app.get("/api/appointments", async (req, res) => {
-      const { doctorId } = req.query; // The doctor's ID will be passed as a query parameter
-
-      if (!doctorId) {
-        return res.status(400).json({ message: "Doctor ID is required" });
-      }
-
-      try {
-        const appointments = await appointmentCollection
-          .find({ doctorId: new ObjectId(doctorId) }) // Assuming doctorId is stored in the appointment
-          .toArray();
-
-        res.status(200).json({
-          message: "List of appointments",
-          data: appointments,
-        });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error fetching appointments" });
-      }
-    });
-    // / Approve or reject
-    app.put("/api/appointments/:id/status", async (req, res) => {
-      const { id } = req.params; // The appointment ID passed as a parameter
-      const { status } = req.body; // The status to update (approve or reject)
-
-      if (!status || !["approved", "rejected"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
-      }
-
-      try {
-        const updatedAppointment = await appointmentCollection.findOneAndUpdate(
-          { _id: new ObjectId(id) },
-          { $set: { status } },
-          { returnDocument: "after" } // Return the updated appointment
-        );
-
-        if (!updatedAppointment.value) {
-          return res.status(404).json({ message: "Appointment not found" });
-        }
-
-        res.status(200).json({
-          message: "Appointment status updated successfully",
-          appointment: updatedAppointment.value,
-        });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error updating appointment status" });
-      }
-    });
-
     // Admin Routes
     app.get("/api/users", async (req, res) => {
       try {
@@ -290,119 +222,7 @@ async function run() {
       }
     });
 
-    app.get("/api/admin/appointments", async (req, res) => {
-      try {
-        const { patientId } = req.query;
-        console.log(patientId);
-
-        if (!patientId) {
-          return res.status(400).json({ message: "Patient ID is required" });
-        }
-
-        // Check if the user is an admin
-        const user = await userCollection.find({ _id: patientId });
-
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-
-        let query = {};
-
-        // Only admins can see all appointments
-        if (user.role !== "admin") {
-          query.patientId = patientId;
-        }
-
-        const appointments = await appointmentCollection.find().toArray();
-
-        res.status(200).json({
-          message: "List of appointments",
-          data: appointments,
-        });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error fetching appointments" });
-      }
-    });
-
-    app.get("/api/reports", async (req, res) => {
-      try {
-        const userCount = await userCollection.countDocuments();
-        const appointmentCount = await appointmentCollection.countDocuments();
-        const doctorCount = await userCollection.countDocuments({
-          role: "doctor",
-        });
-
-        const analytics = {
-          totalUsers: userCount,
-          totalAppointments: appointmentCount,
-          totalDoctors: doctorCount,
-        };
-
-        res.status(200).json({
-          message: "System Analytics",
-          data: analytics,
-        });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error fetching system analytics" });
-      }
-    });
-    //doctors
-    app.get("/api/doctors/:doctorId", async (req, res) => {
-      try {
-        const { doctorId } = req.params;
-
-        if (!ObjectId.isValid(doctorId)) {
-          return res.status(400).json({ message: "Invalid Doctor ID" });
-        }
-
-        const doctor = await doctorCollection.findOne({
-          _id: new ObjectId(doctorId),
-        });
-
-        if (!doctor) {
-          return res.status(404).json({ message: "Doctor not found" });
-        }
-
-        res.status(200).json({
-          message: "Doctor details retrieved successfully",
-          data: doctor,
-        });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error fetching doctor details" });
-      }
-    });
-    //appoved
-    app.put("/api/admin/doctors/:doctorId", async (req, res) => {
-      try {
-        const { doctorId } = req.params;
-
-        if (!ObjectId.isValid(doctorId)) {
-          return res.status(400).json({ message: "Invalid Doctor ID" });
-        }
-
-        const updatedDoctor = await doctorCollection.findOneAndUpdate(
-          { _id: new ObjectId(doctorId) },
-          { $set: { registrations: "Approved" } }, // ✅ Update the 'registrations' field
-          { returnDocument: "after" } // Return updated document
-        );
-
-        if (!updatedDoctor) {
-          return res.status(404).json({ message: "Doctor not found" });
-        }
-
-        res.status(200).json({
-          message: "Doctor registration approved successfully",
-          data: updatedDoctor,
-        });
-      } catch (error) {
-        console.error("Error approving doctor registration:", error);
-        res.status(500).json({ message: "Internal server error" });
-      }
-    });
-    // delete
+    // Admin: Delete doctor
     app.delete("/api/admin/doctors/:doctorId", async (req, res) => {
       try {
         const { doctorId } = req.params;
@@ -425,36 +245,13 @@ async function run() {
         res.status(500).json({ message: "Internal server error" });
       }
     });
-    app.delete("/api/admin/user/:doctorId", async (req, res) => {
-      try {
-        const { doctorId } = req.params;
 
-        if (!ObjectId.isValid(doctorId)) {
-          return res.status(400).json({ message: "Invalid Doctor ID" });
-        }
-
-        const deletedDoctor = await userCollection.findOneAndDelete({
-          _id: new ObjectId(doctorId),
-        });
-
-        if (!deletedDoctor) {
-          return res.status(404).json({ message: "User not found" });
-        }
-
-        res.status(200).json({ message: "User deleted successfully" });
-      } catch (error) {
-        console.error("Error deleting User:", error);
-        res.status(500).json({ message: "Internal server error" });
-      }
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
     });
-
-    // main route call
-    app.get("/", (req, res) => {
-      res.send("Doctors portal server is running");
-    });
-  } finally {
+  } catch (error) {
+    console.error("Error connecting to database:", error);
   }
 }
-run().catch(console.log);
 
-app.listen(port, () => console.log(`Server running on port ${port}`));
+run();

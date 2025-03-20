@@ -40,38 +40,41 @@ const DoctorsList = () => {
   if (error) {
     return <div>Error: {error}</div>;
   }
+  console.log(doctors);
 
   return (
-    <div className="mt-10">
+    <div className="mt-10 mx-5  mb-5">
       <h2 className="text-2xl font-bold mb-4">Doctors List</h2>
       <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {doctors?.map((doctor, index) => (
-          <li
-            key={doctor?.id}
-            className="p-4 border-[1px] border-[#5caff3] rounded shadow flex flex-col items-center"
-          >
-            <img
-              src={doctorImages[index % doctorImages?.length]} // Assigning images in a loop
-              className="w-32 h-32 rounded-full object-cover mb-3"
-            />
-            <h3 className="text-xl font-semibold">{doctor?.name}</h3>
-            <p>
-              <strong>Specialty:</strong> {doctor?.specialty}
-            </p>
-            <p>
-              <strong>Location:</strong> {doctor?.location}
-            </p>
-            <Link
-              to={{
-                pathname: "/appointmentForm",
-              }}
-              state={{ doctor }}
-              className="p-2 text-amber-50 bg-[#5caff388] rounded  cursor-pointer font-bold"
+        {doctors
+          ?.filter((doctor) => doctor.registrations === "Approved") // Filtering approved doctors
+          .map((doctor, index) => (
+            <li
+              key={doctor?.id}
+              className="p-4 border-[1px] border-[#5caff3] rounded shadow flex flex-col items-center"
             >
-              Appointment
-            </Link>
-          </li>
-        ))}
+              <img
+                src={doctorImages[index % doctorImages?.length]} // Assigning images in a loop
+                className="w-32 h-32 rounded-full object-cover mb-3"
+              />
+              <h3 className="text-xl font-semibold">{doctor?.name}</h3>
+              <p>
+                <strong>Specialty:</strong> {doctor?.specialty}
+              </p>
+              <p>
+                <strong>Location:</strong> {doctor?.location}
+              </p>
+              <Link
+                to={{
+                  pathname: "/appointmentForm",
+                }}
+                state={{ doctor }}
+                className="p-2 hover:bg-accent rounded-b-none duration-200 rounded-t-xl mt-4 mb-[-17px] z-40  text-amber-50 bg-[#5caff3] rounded cursor-pointer font-bold"
+              >
+                Appointment
+              </Link>
+            </li>
+          ))}
       </ul>
     </div>
   );

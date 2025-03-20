@@ -72,6 +72,7 @@ const AllAppointment = () => {
     <div className="mt-10 px-5">
       <h2 className="text-2xl font-bold mb-4">Appointments</h2>
       <AppointmentTable
+        storedUser={storedUser}
         appointments={appointments}
         doctorDetails={doctorDetails}
       />

@@ -2,40 +2,76 @@ import React, { useState } from "react";
 import { MdOutlineEdit, MdDeleteOutline } from "react-icons/md";
 import { IoEyeOutline } from "react-icons/io5";
 import { baseURL } from "../../utility/Api/BaseURl";
-
-const AppointmentTable = ({ appointments, doctorDetails }) => {
+import { PiFilePdfBold } from "react-icons/pi";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import toast from "react-hot-toast";
+const AppointmentTable = ({
+  appointments,
+  setAppointments,
+  doctorDetails,
+  storedUser,
+}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const cancelOrRescheduleAppointment = async (
-    appointmentId,
-    status,
-    newDateTime = null
-  ) => {
-    setLoading(true);
+  const deleteAppointment = async (appointmentId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this appointment?"
+    );
+    if (!confirmDelete) return;
+
     try {
-      const response = await fetch(`${baseURL}appointments/${appointmentId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status, newDateTime }),
-      });
+      setLoading(true);
+      const response = await fetch(
+        `${baseURL}admin/appointment/${appointmentId}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error("Failed to update the appointment");
+      const data = await response.json();
+
+      if (response.ok) {
+        setAppointments((prevAppointments) =>
+          prevAppointments.filter(
+            (appointment) => appointment._id !== appointmentId
+          )
+        );
+        toast.success("Appointment deleted successfully!");
+      } else {
+        throw new Error(data.message || "Failed to delete appointment");
       }
-
-      const result = await response.json();
-      alert(result.message); // Show success message
-      // Optionally, you can refresh the appointments list or make necessary updates
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err.message);
+      toast.error("Error deleting appointment: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const generatePDF = (appointment) => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Appointment Details", 70, 20);
+
+    const columns = ["Field", "Details"];
+    const rows = [
+      ["Doctor", doctorDetails[appointment.doctorId]?.name || "N/A"],
+      ["Specialty", doctorDetails[appointment.doctorId]?.specialty || "N/A"],
+      ["Date & Time", new Date(appointment.dateTime).toLocaleString()],
+      ["Status", appointment.status],
+      ["Contact", appointment.contact],
+      ["Gender", appointment.gender],
+      ["Description", appointment.address],
+    ];
+
+    // Use autoTable plugin correctly
+    autoTable(doc, { head: [columns], body: rows, startY: 30 });
+
+    doc.save(`appointment_${appointment._id}.pdf`);
+  };
   return (
     <div>
       {loading && <div>Loading...</div>}
@@ -53,7 +89,12 @@ const AppointmentTable = ({ appointments, doctorDetails }) => {
               <th className="p-3 border-[1px] border-gray-300">Status</th>
               <th className="p-3 border-[1px] border-gray-300">Contact</th>
               <th className="p-3 border-[1px] border-gray-300">Gender</th>
-              <th className="p-3 border-[1px] border-gray-300">Address</th>
+              <th
+                title="Describe Symptomps"
+                className="p-3 border-[1px] border-gray-300"
+              >
+                Description
+              </th>
               <th className="p-3 border-[1px] border-gray-300">Actions</th>
             </tr>
           </thead>
@@ -83,39 +124,40 @@ const AppointmentTable = ({ appointments, doctorDetails }) => {
                 <td className="p-3 border-[1px] border-gray-300">
                   {appointment.gender}
                 </td>
-                <td className="p-3 border-[1px] border-gray-300">
-                  {appointment.address}
+                <td
+                  title={appointment.address}
+                  className="p-3 border-[1px] border-gray-300"
+                >
+                  {appointment.address.slice(0, 20)}..
                 </td>
                 <td className="p-3 border-[1px] border-gray-300 relative w-28">
                   <div className="flex justify-start gap-4 items-center">
+                    {storedUser?.role == "admin" ? (
+                      <p
+                        onClick={() => generatePDF(appointment)}
+                        title="Edit"
+                        className="text-gray-100 text-lg hover:scale-150 duration-300 cursor-pointer bg-green-400 p-1 rounded"
+                      >
+                        <PiFilePdfBold />
+                      </p>
+                    ) : (
+                      <p
+                        title="Edit"
+                        className="text-gray-100 text-lg hover:scale-150 duration-300 cursor-pointer bg-green-400 p-1 rounded"
+                      >
+                        <MdOutlineEdit />
+                      </p>
+                    )}
                     <p
-                      title="Edit"
-                      className="text-gray-100 text-lg hover:scale-150 duration-300 cursor-pointer bg-green-400 p-1 rounded"
-                    >
-                      <MdOutlineEdit />
-                    </p>
-                    <p
+                      onClick={() => deleteAppointment(appointment._id)}
                       title="Cancel"
                       className="text-gray-100 text-lg hover:scale-150 duration-300 cursor-pointer bg-red-400 p-1 rounded"
-                      onClick={() =>
-                        cancelOrRescheduleAppointment(
-                          appointment._id,
-                          "Cancelled"
-                        )
-                      }
                     >
                       <MdDeleteOutline />
                     </p>
                     <p
                       title="Reschedule"
                       className="text-gray-800 text-lg hover:scale-150 duration-300 cursor-pointer bg-sky-200 p-1 rounded"
-                      onClick={() =>
-                        cancelOrRescheduleAppointment(
-                          appointment._id,
-                          "Rescheduled",
-                          new Date().toISOString() // For example, reschedule to current date-time
-                        )
-                      }
                     >
                       <IoEyeOutline />
                     </p>
