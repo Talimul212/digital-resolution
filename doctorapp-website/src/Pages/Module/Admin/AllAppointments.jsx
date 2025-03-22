@@ -12,7 +12,7 @@ const AllAppointments = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        let url = `${baseURL}admin/appointments?patientId=${storedUser.id}`;
+        let url = `${baseURL}admin/allappointment`;
 
         const response = await fetch(url);
         if (!response.ok) {
@@ -21,6 +21,7 @@ const AllAppointments = () => {
 
         const data = await response.json();
         setAppointments(data?.data);
+        console.log(data?.data);
 
         fetchDoctorDetails(data?.data);
       } catch (error) {
@@ -52,6 +53,7 @@ const AllAppointments = () => {
         }
       })
     );
+    console.log("dat", doctorData);
 
     setDoctorDetails(doctorData);
   };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { baseURL } from "../../utility/Api/BaseURl";
 import toast from "react-hot-toast";
@@ -7,10 +7,16 @@ const AppointmentForm = () => {
   const location = useLocation();
   const doctor = location.state?.doctor;
   const navigate = useNavigate();
+
   // Get user data from localStorage
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
 
-  // Initialize state with default values
+  // Redirect to login if the user is not logged in
+  useEffect(() => {
+    if (!storedUser?.id) {
+      navigate("/login", { replace: true });
+    }
+  }, [storedUser, navigate]);
   const [formData, setFormData] = useState({
     name: storedUser.name || "",
     email: storedUser.email || "",

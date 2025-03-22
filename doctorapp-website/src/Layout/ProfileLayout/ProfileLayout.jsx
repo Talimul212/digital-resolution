@@ -25,7 +25,7 @@ const ProfileLayout = () => {
             <>
               <Link
                 className=" mt-3 hover:bg-amber-50 duration-300 hover:text-black flex p-2 justify-start font-semibold gap-2 items-center text-white"
-                to="/profile/allappointmen"
+                to="/profile/allappointment"
               >
                 <FaClipboardList size={23} />
                 Appointments
@@ -43,7 +43,7 @@ const ProfileLayout = () => {
             <>
               <Link
                 className="flex text-center mt-3 p-2 hover:bg-amber-50 duration-300 hover:text-black  font-semibold justify-start gap-2 items-center text-white"
-                to="/profile/details"
+                to="/profile/appoveblelist"
               >
                 <MdManageAccounts size={23} />
                 Approveble
@@ -68,7 +68,7 @@ const ProfileLayout = () => {
               </Link>
               <Link
                 className="flex mt-3 hover:bg-amber-50 duration-300 gap-1 hover:text-black p-2 font-semibold justify-start items-center text-white"
-                to="/profile/allappointment"
+                to="/profile/admin/allappointment"
               >
                 <FaWpforms size={23} />
                 Appointments

@@ -10,7 +10,8 @@ const Navbar = () => {
 
   // Logout function
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove token from local storage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     toast.success("You have been logged out.");
     navigate("/login"); // Redirect to login page
   };
@@ -40,22 +41,17 @@ const Navbar = () => {
               tabIndex={0}
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
             >
-              <li>
-                <a>Doctors</a>
+              <li className="  text-md font-bold text-black">
+                <Link to="/">Home</Link>
               </li>
-              <li>
-                <a>Parent</a>
-                <ul className="p-2">
-                  <li>
-                    <a>Submenu 1</a>
-                  </li>
-                  <li>
-                    <a>Submenu 2</a>
-                  </li>
-                </ul>
+              <li className="  text-md font-bold text-black">
+                <Link to="/doctorslist">Doctors</Link>
               </li>
-              <li>
-                <a>Item 3</a>
+              <li className=" font-bold text-md text-black">
+                <Link to="/contact">Contact</Link>
+              </li>
+              <li className="  text-md font-bold text-black">
+                <Link to="/aboutus">About Us</Link>
               </li>
             </ul>
           </div>

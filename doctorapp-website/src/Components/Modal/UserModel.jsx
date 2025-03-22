@@ -1,8 +1,6 @@
 import React from "react";
 import { RxCross1 } from "react-icons/rx";
 const UserModel = ({ isModalOpen, selectedUser, setIsModalOpen }) => {
-  console.log(isModalOpen);
-
   return (
     <div>
       <div

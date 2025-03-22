@@ -80,6 +80,7 @@ async function run() {
     // Login API
     app.post("/api/auth/login", async (req, res) => {
       const { email, password } = req.body;
+      console.log(email);
 
       const user = await userCollection.findOne({ email });
       if (!user) {
@@ -115,7 +116,38 @@ async function run() {
         data: doctors,
       });
     });
+    app.get("/api/doctors/:doctorId", async (req, res) => {
+      const { doctorId } = req.params;
+      console.log("Requested Doctor ID:", doctorId);
 
+      try {
+        let doctor;
+
+        // Try fetching doctor by _id
+        if (ObjectId.isValid(doctorId)) {
+          doctor = await doctorCollection.findOne({
+            _id: new ObjectId(doctorId),
+          });
+        }
+
+        // If not found by _id, try fetching by userID
+        if (!doctor) {
+          doctor = await doctorCollection.findOne({ userID: doctorId });
+        }
+
+        if (!doctor) {
+          return res.status(404).json({ message: "Doctor not found" });
+        }
+
+        res.status(200).json({
+          message: "Doctor details fetched successfully",
+          data: doctor,
+        });
+      } catch (error) {
+        console.error("Error fetching doctor details:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
     // Book an appointment
     app.post("/api/appointments", async (req, res) => {
       try {
@@ -208,6 +240,93 @@ async function run() {
       }
     });
 
+    //Doctor
+    app.post("/api/doctor/registration", async (req, res) => {
+      try {
+        const {
+          userID,
+          name,
+          specialty,
+          location,
+          availability,
+          rating,
+          registrations,
+          contact,
+          gender,
+          address,
+        } = req.body;
+
+        // Validate required fields
+        if (
+          !userID ||
+          !name ||
+          !specialty ||
+          !location ||
+          !availability ||
+          !registrations
+        ) {
+          return res
+            .status(400)
+            .json({ message: "All required fields must be provided" });
+        }
+
+        // Construct the new doctor object
+        const newDoctor = {
+          userID,
+          name,
+          specialty,
+          location,
+          availability, // Expected as an array of ISO date strings
+          rating: rating || 0, // Default rating if not provided
+          reviews: [], // Default empty reviews array
+          registrations, // Registration status
+          contact,
+          gender,
+          address,
+          createdAt: new Date(), // Store creation timestamp
+        };
+
+        // Insert the new doctor record into the collection
+        const result = await doctorCollection.insertOne(newDoctor);
+
+        // Fetch the inserted doctor to return complete data
+        const doctor = await doctorCollection.findOne({
+          _id: result.insertedId,
+        });
+
+        res.status(201).json({
+          message: "Doctor registered successfully",
+          doctor,
+        });
+      } catch (error) {
+        console.error("Error registering doctor:", error);
+        res.status(500).json({ message: "Error registering doctor" });
+      }
+    });
+
+    app.get("/api/doctor/appointments/doctorID", async (req, res) => {
+      try {
+        const { doctorID } = req.query;
+
+        if (!doctorID) {
+          return res.status(400).json({ message: "Doctor ID is required" });
+        }
+
+        const appointments = await appointmentCollection.find({ doctorID });
+        if (appointments.length === 0) {
+          return res.status(404).json({ message: "No appointments found" });
+        }
+
+        res.status(200).json({
+          message: "List of appointments",
+          data: appointments,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error fetching appointments" });
+      }
+    });
+
     // Admin Routes
     app.get("/api/users", async (req, res) => {
       try {
@@ -221,7 +340,28 @@ async function run() {
         res.status(500).json({ message: "Error fetching users" });
       }
     });
+    app.delete("/api/admin/user/:userId", async (req, res) => {
+      try {
+        const { userId } = req.params;
 
+        if (!ObjectId.isValid(userId)) {
+          return res.status(400).json({ message: "Invalid Doctor ID" });
+        }
+
+        const deletedDoctor = await userCollection.findOneAndDelete({
+          _id: new ObjectId(userId),
+        });
+
+        if (!deletedDoctor) {
+          return res.status(404).json({ message: "user not found" });
+        }
+
+        res.status(200).json({ message: "user deleted successfully" });
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
     // Admin: Delete doctor
     app.delete("/api/admin/doctors/:doctorId", async (req, res) => {
       try {
@@ -245,7 +385,51 @@ async function run() {
         res.status(500).json({ message: "Internal server error" });
       }
     });
+    app.get("/api/admin/allappointment", async (req, res) => {
+      try {
+        const appointment = await appointmentCollection.find().toArray();
+        res.status(200).json({
+          message: "List of all Appointment",
+          data: appointment,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error fetching Appointment" });
+      }
+    });
+    // //appoved
+    app.put("/api/admin/doctors/:doctorId", async (req, res) => {
+      try {
+        const { doctorId } = req.params;
 
+        // Validate doctorId
+        if (!ObjectId.isValid(doctorId)) {
+          return res.status(400).json({ message: "Invalid Doctor ID format" });
+        }
+
+        // Update the doctor's registration status
+        const updatedDoctor = await doctorCollection.findOneAndUpdate(
+          { _id: new ObjectId(doctorId) },
+          { $set: { registrations: "Approve" } }, // ✅ Set registration to "Approved"
+          { returnDocument: "after" } // ✅ Return the updated document
+        );
+
+        // Check if doctor was found and updated
+        if (!updatedDoctor?.value) {
+          return res
+            .status(404)
+            .json({ message: "Doctor not found or already approved" });
+        }
+
+        res.status(200).json({
+          message: "Doctor registration approved successfully",
+          data: updatedDoctor.value, // ✅ Send the updated doctor data
+        });
+      } catch (error) {
+        console.error("Error approving doctor registration:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
     });

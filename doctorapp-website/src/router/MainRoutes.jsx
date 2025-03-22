@@ -14,6 +14,9 @@ import AllUser from "../Pages/Module/Admin/AllUser";
 import AllDoctor from "../Pages/Module/Admin/AllDoctor";
 import AllAppointments from "../Pages/Module/Admin/AllAppointments";
 import WelcomePage from "../Pages/Module/Profile/WelcomePage";
+import PrivateRoute from "./Private/PrivateRoute";
+import AdminRoute from "./AdminRoute/AdminRoute";
+import Appoveble from "../Pages/Module/Doctor/Appoveble";
 
 const router = createBrowserRouter([
   {
@@ -39,13 +42,21 @@ const router = createBrowserRouter([
       },
       {
         path: "/appointmentForm",
-        element: <AppointmentFrom />,
+        element: (
+          <PrivateRoute>
+            <AppointmentFrom />
+          </PrivateRoute>
+        ),
       },
     ],
   },
   {
     path: "/profile",
-    element: <ProfileLayout />,
+    element: (
+      <PrivateRoute>
+        <ProfileLayout />
+      </PrivateRoute>
+    ),
     errorElement: <ErrorPage />,
     children: [
       {
@@ -57,8 +68,12 @@ const router = createBrowserRouter([
         element: <Profile />,
       },
       {
-        path: "/profile/allappointmen",
+        path: "/profile/allappointment",
         element: <AllAppointment />,
+      },
+      {
+        path: "/profile/appoveblelist",
+        element: <Appoveble />,
       },
       {
         path: "/profile/reviews",
@@ -66,15 +81,29 @@ const router = createBrowserRouter([
       },
       {
         path: "/profile/alluser",
-        element: <AllUser />,
+        element: (
+          <AdminRoute>
+            {" "}
+            <AllUser />
+          </AdminRoute>
+        ),
       },
       {
         path: "/profile/alldoctor",
-        element: <AllDoctor />,
+        element: (
+          <AdminRoute>
+            {" "}
+            <AllDoctor />
+          </AdminRoute>
+        ),
       },
       {
-        path: "/profile/allappointment",
-        element: <AllAppointments />,
+        path: "/profile/admin/allappointment",
+        element: (
+          <AdminRoute>
+            <AllAppointments />
+          </AdminRoute>
+        ),
       },
     ],
   },

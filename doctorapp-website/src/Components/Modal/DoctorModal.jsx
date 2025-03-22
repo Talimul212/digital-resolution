@@ -71,7 +71,7 @@ const DoctorModal = ({
           </div>
 
           <div className="flex items-center gap-2 md:gap-3 w-full justify-end mt-6">
-            {!selectedDoctor?.registrations === "Approve" && (
+            {selectedDoctor?.registrations === "Pending" && (
               <button
                 className="mt-5 font-bold bg-[#5caff388] text-white px-4 hover:text-gray-500 py-2 rounded duration-200"
                 onClick={handleApprove}

@@ -83,9 +83,11 @@ const DoctorsTable = ({ doctors, loading, error, fetchDoctors }) => {
                 <td className="p-3 border-[1px] border-gray-300">
                   <select>
                     <option>Show availability</option>
-                    <option disabled>March 20, 2025 - 4:00 PM</option>
-                    <option disabled>March 11, 2025 - 4:00 PM</option>
-                    <option disabled>March 12, 2025 - 4:00 PM</option>
+                    {doctor?.availability?.map((item, i) => (
+                      <option key={i} disabled>
+                        {item}
+                      </option>
+                    ))}
                   </select>
                 </td>
                 <td className="p-3 border-[1px] border-gray-300">
