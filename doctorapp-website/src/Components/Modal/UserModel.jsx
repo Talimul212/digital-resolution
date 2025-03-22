@@ -21,13 +21,13 @@ const UserModel = ({ isModalOpen, selectedUser, setIsModalOpen }) => {
                 <strong>User Email:</strong> {selectedUser?.email}
               </p>
               <p className="mb-2">
-                <strong>Contact:</strong> {selectedUser?.role}
+                <strong>Contact:</strong> {selectedUser?.contact}
               </p>
               <p className="mb-2">
-                <strong>Gender :</strong> {selectedUser?.role}
+                <strong>Gender :</strong> {selectedUser?.gender}
               </p>
               <p className="mb-2">
-                <strong>User Address:</strong> {selectedUser?.role}
+                <strong>User Address:</strong> {selectedUser?.location}
               </p>
               <p className="mb-2">
                 <strong>User Role:</strong> {selectedUser?.role}

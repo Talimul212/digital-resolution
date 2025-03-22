@@ -2,63 +2,95 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import DoctorRegistration from "../../../Components/Form/DoctorResgistation";
 import { baseURL } from "../../../utility/Api/BaseURl";
+import PatientRegistration from "../../../Components/Form/PatientRegistration";
 
 const Profile = () => {
-  const [doctorDetails, setDoctorDetails] = useState({});
+  const [profileData, setProfileData] = useState({});
   const storedUser = JSON.parse(localStorage.getItem("user")) || {};
-
   useEffect(() => {
-    const fetchDoctorDetails = async () => {
-      if (storedUser.role === "doctor" && storedUser.id) {
+    const fetchUserDetails = async () => {
+      if (!storedUser || !storedUser.role || !storedUser.id) {
+        console.warn("User data is missing from localStorage");
+        return;
+      }
+
+      if (!profileData.name) {
+        const userType = storedUser.role === "doctor" ? "doctors" : "patient"; // Fixed "patient" typo
+        const apiUrl = `${baseURL}${userType}/${storedUser.id}`;
+
         try {
-          const response = await axios.get(
-            `${baseURL}doctors/${storedUser.id}`
-          );
+          const response = await axios.get(apiUrl);
+
           if (response.data) {
-            setDoctorDetails(response.data?.data || {});
+            setProfileData(response.data?.data || {});
           }
         } catch (error) {
-          console.error("Error fetching doctor details:", error);
+          console.error(`Error fetching ${userType} details:`, error);
         }
       }
     };
 
-    fetchDoctorDetails();
-  }, [storedUser.role, storedUser.id]);
+    fetchUserDetails();
+  }, [storedUser]);
+  console.log("lolo", profileData.length);
+
+  if (!profileData) {
+    <p>Loading....</p>;
+  }
 
   return (
     <div>
       <div className="flex items-center justify-center flex-col">
         <h2 className="text-2xl mt-6 font-bold text-center">
-          <span className="uppercase text-[#5caff3]">{storedUser.role}</span>{" "}
-          Registration
+          <span className="uppercase text-[#5caff3]">{storedUser.role} </span>
+          Registration{" "}
+          {profileData && (profileData.name || profileData.length > 0)
+            ? "Successfully Completed"
+            : ""}
         </h2>
-        <p className="text-gray-600 text-center mb-6">
-          Fill in the form below to register as a <span>{storedUser.role}</span>
-          . Please provide accurate details to ensure proper verification.
-        </p>
+        {!profileData?.name && (
+          <p className="text-gray-600 text-center mb-6">
+            Fill in the form below to register as a{" "}
+            <span>{storedUser.role}</span>. Please provide accurate details to
+            ensure proper verification.
+          </p>
+        )}
       </div>
 
-      {/* Display doctor details */}
-
-      {doctorDetails ? (
-        <>
-          {doctorDetails?.name && (
-            <div className="p-4    text-center">
-              <h3 className="text-lg font-semibold">
-                Doctor Name: {doctorDetails.name}
-              </h3>
-              <p>Specialty: {doctorDetails.specialty}</p>
-              <p>Location: {doctorDetails.location}</p>
-              <p>Contact: {doctorDetails.contact}</p>
-              <p>Gender: {doctorDetails.gender}</p>
-            </div>
-          )}
-        </>
+      {/* Display profile data for doctor or patient */}
+      {profileData && (profileData.name || profileData.length > 0) ? (
+        <div className="p-6 max-w-3xl mx-auto bg-white rounded-lg border-[1px] border-gray-300 mt-10">
+          <h3 className="text-2xl font-semibold text-gray-800 mb-4 text-center">
+            {storedUser?.role
+              ? `${
+                  storedUser.role.charAt(0).toUpperCase() +
+                  storedUser.role.slice(1)
+                } Name:`
+              : "User"}
+            {profileData?.name || "N/A"}
+          </h3>
+          <div className="space-y-4">
+            <p className="text-lg text-gray-600">
+              <span className="font-semibold">Location:</span>{" "}
+              {profileData?.location || "N/A"}
+            </p>
+            <p className="text-lg text-gray-600">
+              <span className="font-semibold">Contact:</span>{" "}
+              {profileData?.contact || "N/A"}
+            </p>
+            <p className="text-lg text-gray-600">
+              <span className="font-semibold">Gender:</span>{" "}
+              {profileData?.gender || "N/A"}
+            </p>
+          </div>
+        </div>
       ) : (
         <>
           {storedUser?.role === "doctor" && (
-            <DoctorRegistration userID={storedUser.id} />
+            <DoctorRegistration userID={storedUser} />
+          )}
+          {storedUser?.role === "patient" && (
+            <PatientRegistration userID={storedUser} />
           )}
         </>
       )}

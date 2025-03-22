@@ -23,6 +23,7 @@ const DoctorModal = ({
 
       if (response.status === 200) {
         toast.success("Doctor registration approved!");
+        window.location.reload();
         refreshDoctors(); // Refresh doctor list
         setIsModalOpen(false);
       }

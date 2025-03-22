@@ -5,7 +5,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import UserModel from "../Modal/UserModel";
 import { baseURL } from "../../utility/Api/BaseURl";
-const UsersTable = ({ loading, users, error, fetchDoctors }) => {
+const UsersTable = ({ loading, users, error }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -38,11 +38,11 @@ const UsersTable = ({ loading, users, error, fetchDoctors }) => {
 
       if (response.status === 200) {
         toast.success("User deleted successfully!");
-        fetchDoctors();
+        window.location.reload();
       }
     } catch (error) {
       console.error("Error deleting User:", error);
-      toast.error("Failed to delete User.");
+      // toast.error("Failed to delete User.");
     } finally {
       setDeleting(false);
     }
@@ -91,7 +91,7 @@ const UsersTable = ({ loading, users, error, fetchDoctors }) => {
                     {user.gender}
                   </td>
                   <td className="p-3 border-[1px] border-gray-300">
-                    {user.address}
+                    {user.location}
                   </td>
                   <td className="p-3 border-[1px] border-gray-300 relative w-28">
                     <div className="flex justify-center gap-4 items-center">

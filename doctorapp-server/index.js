@@ -28,8 +28,7 @@ async function run() {
 
     // Register API
     app.post("/api/auth/register", async (req, res) => {
-      const { name, email, password, role, specialty, location, availability } =
-        req.body;
+      const { name, email, password, role } = req.body;
 
       try {
         const existingUser = await userCollection.findOne({ email });
@@ -43,18 +42,6 @@ async function run() {
         const newUser = { name, email, password: hashedPassword, role };
 
         // If role is doctor, store doctor details separately
-        if (role === "doctor") {
-          const doctorData = {
-            name,
-            email,
-            specialty,
-            location,
-            availability,
-            rating: 0,
-            reviews: [],
-          };
-          await doctorCollection.insertOne(doctorData);
-        }
 
         const result = await userCollection.insertOne(newUser);
         const insertedUser = { id: result.insertedId, name, email, role };
@@ -126,14 +113,14 @@ async function run() {
         // Try fetching doctor by _id
         if (ObjectId.isValid(doctorId)) {
           doctor = await doctorCollection.findOne({
-            _id: new ObjectId(doctorId),
+            doctorLogID: doctorId,
           });
         }
 
         // If not found by _id, try fetching by userID
-        if (!doctor) {
-          doctor = await doctorCollection.findOne({ userID: doctorId });
-        }
+        // if (!doctor) {
+        //   doctor = await doctorCollection.findOne({ doctorLogID: doctorLogID });
+        // }
 
         if (!doctor) {
           return res.status(404).json({ message: "Doctor not found" });
@@ -145,6 +132,38 @@ async function run() {
         });
       } catch (error) {
         console.error("Error fetching doctor details:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+    app.get("/api/patient/:patientID", async (req, res) => {
+      const { patientID } = req.params;
+      console.log("Requested patient ID:", patientID);
+
+      try {
+        let patient;
+
+        // Try fetching doctor by _id
+        if (ObjectId.isValid(patientID)) {
+          patient = await userCollection.findOne({
+            _id: new ObjectId(patientID),
+          });
+        }
+
+        // If not found by _id, try fetching by userID
+        if (!patient) {
+          patient = await userCollection.findOne({ userID: patientID });
+        }
+
+        if (!patient) {
+          return res.status(404).json({ message: "Patient not found" });
+        }
+
+        res.status(200).json({
+          message: "Patient details fetched successfully",
+          data: patient,
+        });
+      } catch (error) {
+        console.error("Error fetching patient details:", error);
         res.status(500).json({ message: "Internal server error" });
       }
     });
@@ -240,11 +259,11 @@ async function run() {
       }
     });
 
-    //Doctor
+    //registration
     app.post("/api/doctor/registration", async (req, res) => {
       try {
         const {
-          userID,
+          doctorLogID,
           name,
           specialty,
           location,
@@ -253,12 +272,11 @@ async function run() {
           registrations,
           contact,
           gender,
-          address,
         } = req.body;
 
         // Validate required fields
         if (
-          !userID ||
+          !doctorLogID ||
           !name ||
           !specialty ||
           !location ||
@@ -272,7 +290,7 @@ async function run() {
 
         // Construct the new doctor object
         const newDoctor = {
-          userID,
+          doctorLogID,
           name,
           specialty,
           location,
@@ -282,7 +300,7 @@ async function run() {
           registrations, // Registration status
           contact,
           gender,
-          address,
+
           createdAt: new Date(), // Store creation timestamp
         };
 
@@ -301,6 +319,39 @@ async function run() {
       } catch (error) {
         console.error("Error registering doctor:", error);
         res.status(500).json({ message: "Error registering doctor" });
+      }
+    });
+    app.put("/api/patient/registration", async (req, res) => {
+      try {
+        const { patientLogID, name, location, contact, gender } = req.body;
+
+        if (!patientLogID || !name || !location || !gender) {
+          return res
+            .status(400)
+            .json({ message: "All required fields must be provided" });
+        }
+
+        const updateFields = {
+          name,
+          location,
+          contact,
+          gender,
+          updatedAt: new Date(),
+        };
+
+        const result = await userCollection.findOneAndUpdate(
+          { _id: new ObjectId(patientLogID) },
+          { $set: updateFields },
+          { upsert: true }
+        );
+
+        res.status(200).json({
+          message: "Patient registration updated successfully",
+          result,
+        });
+      } catch (error) {
+        console.error("Error registering patient:", error);
+        res.status(500).json({ message: "Error registering patient" });
       }
     });
 
@@ -397,33 +448,24 @@ async function run() {
         res.status(500).json({ message: "Error fetching Appointment" });
       }
     });
+
     // //appoved
     app.put("/api/admin/doctors/:doctorId", async (req, res) => {
       try {
         const { doctorId } = req.params;
 
-        // Validate doctorId
         if (!ObjectId.isValid(doctorId)) {
           return res.status(400).json({ message: "Invalid Doctor ID format" });
         }
 
-        // Update the doctor's registration status
         const updatedDoctor = await doctorCollection.findOneAndUpdate(
           { _id: new ObjectId(doctorId) },
-          { $set: { registrations: "Approve" } }, // ✅ Set registration to "Approved"
-          { returnDocument: "after" } // ✅ Return the updated document
+          { returnDocument: "after" }
         );
-
-        // Check if doctor was found and updated
-        if (!updatedDoctor?.value) {
-          return res
-            .status(404)
-            .json({ message: "Doctor not found or already approved" });
-        }
 
         res.status(200).json({
           message: "Doctor registration approved successfully",
-          data: updatedDoctor.value, // ✅ Send the updated doctor data
+          data: updatedDoctor.value,
         });
       } catch (error) {
         console.error("Error approving doctor registration:", error);

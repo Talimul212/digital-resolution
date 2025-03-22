@@ -28,12 +28,7 @@ const AllUser = () => {
   return (
     <div className="mt-10 px-5">
       <h2 className="text-2xl font-bold mb-4">Users Management List</h2>
-      <UsersTable
-        fetchUsers={fetchUsers}
-        error={error}
-        loading={loading}
-        users={users}
-      />
+      <UsersTable error={error} loading={loading} users={users} />
     </div>
   );
 };

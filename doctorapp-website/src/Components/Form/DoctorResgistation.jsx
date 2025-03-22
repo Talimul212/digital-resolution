@@ -4,8 +4,9 @@ import { baseURL } from "../../utility/Api/BaseURl";
 
 const DoctorRegistration = ({ userID }) => {
   const [formData, setFormData] = useState({
-    userID,
-    name: "",
+    doctorLogID: userID.id,
+    name: userID.name || "",
+    email: userID.email,
     specialty: "",
     location: "",
     availability: [],
@@ -13,7 +14,6 @@ const DoctorRegistration = ({ userID }) => {
     registrations: "Pending",
     contact: "",
     gender: "",
-    address: "",
   });
 
   const [availabilityEntry, setAvailabilityEntry] = useState({
@@ -65,8 +65,9 @@ const DoctorRegistration = ({ userID }) => {
         toast.success("Doctor registered successfully!");
         // Optionally, navigate or reset form
         setFormData({
-          userID,
-          name: "",
+          doctorLogID: userID.id,
+          name: userID.name || "",
+          email: userID.email,
           specialty: "",
           location: "",
           availability: [],
@@ -74,8 +75,8 @@ const DoctorRegistration = ({ userID }) => {
           registrations: "Pending",
           contact: "",
           gender: "",
-          address: "",
         });
+        window.location.reload();
       } else {
         console.error("Failed to register doctor:", response.statusText);
         toast.error("Failed to register doctor.");
@@ -87,7 +88,7 @@ const DoctorRegistration = ({ userID }) => {
   };
 
   return (
-    <div className=" p-6 bg-white shadow-md mt-[-16px] rounded-md">
+    <div className=" p-6 bg-white  mt-[-16px] rounded-md">
       <form onSubmit={handleSubmit} className="space-y-2">
         {/* Name Input */}
         <div className="flex gap-2 justify-between items-center">
@@ -98,7 +99,7 @@ const DoctorRegistration = ({ userID }) => {
             <input
               type="text"
               name="name"
-              value={formData.name}
+              value={formData.name || userID.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }

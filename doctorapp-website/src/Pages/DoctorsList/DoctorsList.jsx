@@ -45,7 +45,7 @@ const DoctorsList = () => {
   return (
     <div className="mt-10 mx-5  mb-5">
       <h2 className="text-2xl font-bold mb-4">Doctors List</h2>
-      <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {doctors
           ?.filter((doctor) => doctor.registrations === "Approved") // Filtering approved doctors
           .map((doctor, index) => (
