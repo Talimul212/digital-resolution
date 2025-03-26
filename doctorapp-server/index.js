@@ -103,29 +103,94 @@ async function run() {
         data: doctors,
       });
     });
-    app.get("/api/doctors/:doctorId", async (req, res) => {
+    app.get("/api/loop/:patientId", async (req, res) => {
+      const { patientId } = req.params;
+
+      try {
+        let patient;
+
+        // Check if patientId is a valid ObjectId
+        if (ObjectId.isValid(patientId)) {
+          patient = await userCollection.findOne(
+            { _id: new ObjectId(patientId) },
+            { projection: { name: 1, email: 1 } } // Return only name & email
+          );
+        }
+
+        // If not found, try fetching by patientId (string)
+        if (!patient) {
+          patient = await userCollection.findOne(
+            { patientId: patientId },
+            { projection: { name: 1, email: 1 } } // Return only name & email
+          );
+        }
+
+        if (!patient) {
+          return res.status(404).json({ message: "Patient not found" });
+        }
+
+        res.status(200).json({
+          message: "Patient details fetched successfully",
+          data: patient,
+        });
+      } catch (error) {
+        console.error("Error fetching patient details:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
+    app.get("/api/loops/:doctorId", async (req, res) => {
       const { doctorId } = req.params;
-      console.log("Requested Doctor ID:", doctorId);
+      console.log(doctorId);
 
       try {
         let doctor;
 
-        // Try fetching doctor by _id
+        // Check if doctorId is a valid ObjectId
         if (ObjectId.isValid(doctorId)) {
           doctor = await doctorCollection.findOne({
-            doctorLogID: doctorId,
+            _id: new ObjectId(doctorId), // Convert to ObjectId
           });
         }
 
-        // If not found by _id, try fetching by userID
-        // if (!doctor) {
-        //   doctor = await doctorCollection.findOne({ doctorLogID: doctorLogID });
-        // }
+        // If not found, try fetching by doctorId (string)
+        if (!doctor) {
+          doctor = await doctorCollection.findOne({ doctorId: doctorId });
+        }
 
         if (!doctor) {
           return res.status(404).json({ message: "Doctor not found" });
         }
 
+        res.status(200).json({
+          message: "Doctor details fetched successfully",
+          data: doctor,
+        });
+      } catch (error) {
+        console.error("Error fetching doctor details:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+    app.get("/api/doctors/:doctorId", async (req, res) => {
+      const { doctorId } = req.params; // Extract doctorId from URL
+      console.log("Requested Doctor ID:", doctorId);
+
+      try {
+        let doctor;
+
+        // Check if the ID is a valid ObjectId
+        if (doctorId) {
+          doctor = await doctorCollection.findOne({
+            doctorLogID: doctorId,
+          });
+        }
+
+        // If no doctor is found, return 404
+        if (!doctor) {
+          return res.status(404).json({ message: "Doctor not found" });
+        }
+
+        // Return doctor details
         res.status(200).json({
           message: "Doctor details fetched successfully",
           data: doctor,
@@ -355,16 +420,21 @@ async function run() {
       }
     });
 
-    app.get("/api/doctor/appointments/doctorID", async (req, res) => {
+    app.get("/api/doctor/appointments/:doctorID", async (req, res) => {
       try {
-        const { doctorID } = req.query;
+        const { doctorID } = req.params;
+        console.log(doctorID);
 
         if (!doctorID) {
           return res.status(400).json({ message: "Doctor ID is required" });
         }
 
-        const appointments = await appointmentCollection.find({ doctorID });
-        if (appointments.length === 0) {
+        const appointments = await appointmentCollection
+          .find({
+            doctorId: doctorID,
+          })
+          .toArray();
+        if (appointments?.length === 0) {
           return res.status(404).json({ message: "No appointments found" });
         }
 
@@ -472,6 +542,36 @@ async function run() {
         res.status(500).json({ message: "Internal server error" });
       }
     });
+    app.put("/api/patient/status/:appointmentId", async (req, res) => {
+      const { appointmentId } = req.params;
+
+      try {
+        // Check if the appointmentId is valid
+        if (!ObjectId.isValid(appointmentId)) {
+          return res.status(400).json({ message: "Invalid appointment ID" });
+        }
+
+        // Find and update the appointment status
+        const updatedAppointment = await appointmentCollection.findOneAndUpdate(
+          { _id: new ObjectId(appointmentId) },
+          { $set: { status: "booked" } }, // Change status to "booked"
+          { returnDocument: "after" } // Return updated document
+        );
+
+        if (!updatedAppointment) {
+          return res.status(404).json({ message: "Appointment not found" });
+        }
+
+        res.status(200).json({
+          message: "Appointment status updated successfully",
+          data: updatedAppointment,
+        });
+      } catch (error) {
+        console.error("Error updating appointment status:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
     });

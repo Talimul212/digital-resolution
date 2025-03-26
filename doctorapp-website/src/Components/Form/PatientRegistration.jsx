@@ -29,13 +29,6 @@ const PatientRegistration = ({ userID }) => {
         console.log("Patient registered successfully:", result);
         toast.success("Patient registered successfully!");
 
-        setFormData({
-          patientLogID: formData.userID.id || "",
-          name: userID?.name || "",
-          location: "",
-          contact: "",
-          gender: "",
-        });
         window.location.reload();
       } else {
         console.error(

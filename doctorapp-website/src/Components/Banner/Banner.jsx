@@ -13,7 +13,7 @@ const Banner = () => {
               <br /> excepturi exercitationem quasi. In deleniti eaque aut
               repudiandae et a id nisi.
             </p>
-            <button className="p-2 text-white bg-[#5caff388] rounded  cursor-pointer font-bold">
+            <button className="p-2 hover:text-gray-500 duration-200 text-white bg-[#5caff388] rounded  cursor-pointer font-bold">
               Getting Started
             </button>
           </div>

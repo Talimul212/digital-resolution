@@ -12,6 +12,7 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("profileData");
     toast.success("You have been logged out.");
     navigate("/login"); // Redirect to login page
   };

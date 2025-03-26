@@ -32,7 +32,7 @@ const Appointment = () => {
             </p>
             <Link
               to="/doctorslist"
-              className="p-2 text-amber-50 bg-[#5caff388] rounded  cursor-pointer font-bold"
+              className="p-2 text-amber-50 duration-300 hover:text-gray-600 bg-[#5caff388] rounded  cursor-pointer font-bold"
             >
               Appointment
             </Link>

@@ -17,6 +17,7 @@ import WelcomePage from "../Pages/Module/Profile/WelcomePage";
 import PrivateRoute from "./Private/PrivateRoute";
 import AdminRoute from "./AdminRoute/AdminRoute";
 import Appoveble from "../Pages/Module/Doctor/Appoveble";
+import ContactForm from "../Components/Form/Contactform";
 
 const router = createBrowserRouter([
   {
@@ -39,6 +40,10 @@ const router = createBrowserRouter([
       {
         path: "/doctorslist",
         element: <DoctorsList />,
+      },
+      {
+        path: "/contact",
+        element: <ContactForm />,
       },
       {
         path: "/appointmentForm",

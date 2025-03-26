@@ -5,6 +5,7 @@ import { MdManageAccounts } from "react-icons/md";
 import { FaClipboardList } from "react-icons/fa";
 import { MdPreview } from "react-icons/md";
 import { MdGroups2 } from "react-icons/md";
+import { MdApproval } from "react-icons/md";
 import { FaUserDoctor } from "react-icons/fa6";
 import { FaWpforms } from "react-icons/fa6";
 const ProfileLayout = () => {
@@ -45,7 +46,7 @@ const ProfileLayout = () => {
                 className="flex text-center mt-3 p-2 hover:bg-amber-50 duration-300 hover:text-black  font-semibold justify-start gap-2 items-center text-white"
                 to="/profile/appoveblelist"
               >
-                <MdManageAccounts size={23} />
+                <MdApproval size={23} />
                 Approveble
               </Link>
             </>

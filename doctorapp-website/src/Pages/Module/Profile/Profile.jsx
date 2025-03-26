@@ -23,6 +23,12 @@ const Profile = () => {
 
           if (response.data) {
             setProfileData(response.data?.data || {});
+            if (storedUser.role === "doctor") {
+              localStorage.setItem(
+                "profileData",
+                JSON.stringify(response.data?.data || {})
+              );
+            }
           }
         } catch (error) {
           console.error(`Error fetching ${userType} details:`, error);
@@ -32,7 +38,6 @@ const Profile = () => {
 
     fetchUserDetails();
   }, [storedUser]);
-  console.log("lolo", profileData.length);
 
   if (!profileData) {
     <p>Loading....</p>;
@@ -44,11 +49,11 @@ const Profile = () => {
         <h2 className="text-2xl mt-6 font-bold text-center">
           <span className="uppercase text-[#5caff3]">{storedUser.role} </span>
           Registration{" "}
-          {profileData && (profileData.name || profileData.length > 0)
+          {profileData && (profileData.location || profileData.length > 0)
             ? "Successfully Completed"
             : ""}
         </h2>
-        {!profileData?.name && (
+        {!profileData?.location && (
           <p className="text-gray-600 text-center mb-6">
             Fill in the form below to register as a{" "}
             <span>{storedUser.role}</span>. Please provide accurate details to
@@ -58,7 +63,7 @@ const Profile = () => {
       </div>
 
       {/* Display profile data for doctor or patient */}
-      {profileData && (profileData.name || profileData.length > 0) ? (
+      {profileData && (profileData.location || profileData.length > 0) ? (
         <div className="p-6 max-w-3xl mx-auto bg-white rounded-lg border-[1px] border-gray-300 mt-10">
           <h3 className="text-2xl font-semibold text-gray-800 mb-4 text-center">
             {storedUser?.role

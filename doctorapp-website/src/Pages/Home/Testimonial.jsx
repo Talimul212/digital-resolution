@@ -32,17 +32,24 @@ const Testimonial = () => {
     },
   ];
   return (
-    <section className="my-16">
+    <section className="my-16 mx-2">
       <div className="flex justify-center">
+        <figure>
+          <img className=" md:w-20 me-24 hidden  md:block" src={quote} alt="" />
+        </figure>
         <div className="text-center">
           <h4 className="text-xl text-black font-bold">Testimonial</h4>
           <h2 className="text-4xl text-center">What Our Patients Says</h2>
         </div>
         <figure>
-          <img className="w-24 lg:w-48 hidden md:block" src={quote} alt="" />
+          <img
+            className="md:w-20 ms-24 hidden rotate-180 md:block"
+            src={quote}
+            alt=""
+          />
         </figure>
       </div>
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid mt-3 gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {reviews.map((review) => (
           <TestimonialCard key={review._id} review={review}></TestimonialCard>
         ))}

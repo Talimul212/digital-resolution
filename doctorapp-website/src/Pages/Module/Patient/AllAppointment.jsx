@@ -49,7 +49,7 @@ const AllAppointment = () => {
         if (!doctorData[appointment.doctorId]) {
           try {
             const response = await fetch(
-              `${baseURL}doctors/${appointment.doctorId}`
+              `${baseURL}loops/${appointment.doctorId}`
             );
             if (response.ok) {
               const data = await response.json();
@@ -61,6 +61,7 @@ const AllAppointment = () => {
         }
       })
     );
+    console.log(doctorData);
 
     setDoctorDetails(doctorData);
   };
